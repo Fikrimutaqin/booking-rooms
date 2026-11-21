@@ -1,4 +1,3 @@
-// Schema Prisma untuk Room Bookings dengan PostgreSQL Serverless (Prisma Postgres / Neon / Supabase)
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,7 +9,7 @@ datasource db {
 }
 
 enum Role {
-  USER
+  EMPLOYEE
   ADMIN
 }
 
@@ -23,8 +22,9 @@ enum BookingStatus {
 model User {
   id        String    @id @default(uuid())
   email     String    @unique
-  name      String?
-  role      Role      @default(USER)
+  password  String    
+  name      String    
+  role      Role      
   bookings  Booking[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -37,6 +37,7 @@ model Room {
   name        String
   description String?
   capacity    Int       @default(1)
+  facilities  Json      @default("[]")
   location    String?
   bookings    Booking[]
   createdAt   DateTime  @default(now())
