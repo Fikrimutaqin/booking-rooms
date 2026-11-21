@@ -1,0 +1,62 @@
+// Schema Prisma untuk Room Bookings dengan PostgreSQL Serverless (Prisma Postgres / Neon / Supabase)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  name      String?
+  role      Role      @default(USER)
+  bookings  Booking[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("users")
+}
+
+model Room {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  capacity    Int       @default(1)
+  location    String?
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("rooms")
+}
+
+model Booking {
+  id        String        @id @default(uuid())
+  title     String
+  startTime DateTime
+  endTime   DateTime
+  status    BookingStatus @default(CONFIRMED)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId    String
+  room      Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("bookings")
+}

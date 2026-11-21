@@ -1,0 +1,37 @@
+# Docker Compose Root Shortcut
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: booking_room_backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - DIRECT_URL=${DIRECT_URL}
+    env_file:
+      - backend/.env
+    networks:
+      - booking_room_net
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: booking_room_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - booking_room_net
+
+networks:
+  booking_room_net:
+    driver: bridge
