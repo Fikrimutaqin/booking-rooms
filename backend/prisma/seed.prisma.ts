@@ -2,16 +2,13 @@ import { PrismaClient } from "@prisma/client";
 import { UserRole } from "../src/common/enums/user-role.enum";
 import { hashPassword } from "../src/common/utils/hash.util";
 
-import type { User } from "../src/users/interfaces/user.interface";
-import type { Room } from "../src/rooms/interfaces/room.interface";
-
 const prisma = new PrismaClient();
 
 export async function main() {
     /**
      * Seed for Users
      */
-    const users: User[] = [
+    const users = [
         {
             email: 'rpl.11.fikrimutaqin@gmail.com',
             name: 'Fikri Admin',
@@ -37,7 +34,7 @@ export async function main() {
     /**
      * Seed for Rooms
      */
-    const rooms: Room[] = [
+    const rooms = [
         {
             name: 'Room 1',
             location: 'Building A',
