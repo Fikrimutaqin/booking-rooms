@@ -1,5 +1,8 @@
-import { NestFactory } from '@nestjs/core';
+// Core Nest and Other Core
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
+
+// Import Modules
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -18,11 +21,13 @@ async function bootstrap() {
     defaultVersion: '1',
   });
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

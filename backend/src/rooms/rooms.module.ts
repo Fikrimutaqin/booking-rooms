@@ -1,9 +1,19 @@
+// Core Nest and Other Core
 import { Module } from '@nestjs/common';
-import { RoomsService } from './rooms.service';
+
+// Import Modules
+
+// Import Controllers
 import { RoomsController } from './rooms.controller';
 
+// Import Services
+import { RoomsService } from './rooms.service';
+
+// Import Others (Common etc)
+
 @Module({
+  controllers: [RoomsController],
   providers: [RoomsService],
-  controllers: [RoomsController]
+  exports: [RoomsService],
 })
 export class RoomsModule {}
