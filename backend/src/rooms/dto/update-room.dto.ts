@@ -1,7 +1,38 @@
-// Core Nest and Other Core
-import { PartialType } from '@nestjs/mapped-types';
+import {
+  ArrayUnique,
+  IsArray,
+  IsInt,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
-// Import DTOs
-import { CreateRoomDto } from './create-room.dto';
+export class UpdateRoomDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  name?: string;
 
-export class UpdateRoomDto extends PartialType(CreateRoomDto) {}
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  description?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  capacity?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @IsString({ each: true })
+  facilities?: string[];
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  location?: string;
+}
+
