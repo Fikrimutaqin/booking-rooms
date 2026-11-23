@@ -49,16 +49,17 @@ model Room {
 }
 
 model Booking {
-  id        String   @id @default(uuid())
-  roomId    String   @map("room_id")
-  userId    String   @map("user_id")
+  id        String        @id @default(uuid())
+  roomId    String        @map("room_id")
+  userId    String        @map("user_id")
   title     String
-  startAt   DateTime @map("start_at") @db.Timestamptz(3)
-  endAt     DateTime @map("end_at") @db.Timestamptz(3)
-  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  startAt   DateTime      @map("start_at") @db.Timestamptz(3)
+  endAt     DateTime      @map("end_at") @db.Timestamptz(3)
+  status    BookingStatus @default(CONFIRMED)
+  room      Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
 
   @@index([roomId, startAt, endAt])
   @@index([userId])

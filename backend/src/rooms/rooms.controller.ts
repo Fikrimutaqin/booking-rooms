@@ -11,7 +11,10 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 import { Paginate, PaginationParams } from 'src/common/decorators/paginate.decorator';
 
-@Controller('rooms')
+@Controller({
+    path: 'rooms',
+    version: '1'
+})
 export class RoomsController {
     constructor(private readonly rooms: RoomsService) { }
 
