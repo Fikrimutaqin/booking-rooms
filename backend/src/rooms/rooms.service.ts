@@ -7,6 +7,7 @@ import { CreateRoomDto } from './dto/room.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { UserRole } from 'src/common/enums/user-role.enum';
 import { UpdateRoomDto } from './dto/update-room.dto';
+import { BookingStatus } from '@prisma/client';
 
 @Injectable()
 export class RoomsService {
@@ -62,6 +63,7 @@ export class RoomsService {
                 roomId: roomId,
                 startAt: { lt: dayEnd }, // Booking must start before day end
                 endAt: { gt: dayStart }, // Booking must end after day start
+                status: { not: BookingStatus.CANCELLED },
             },
             select: { id: true, title: true, startAt: true, endAt: true },
             orderBy: { startAt: 'desc' },
