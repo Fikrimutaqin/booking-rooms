@@ -1,12 +1,14 @@
 // api/index.ts
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from '../src/app.module';
-import { setupApp } from '../src/setup-app';
 
 let cachedServer: any;
 
 async function getServer() {
     if (!cachedServer) {
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { AppModule } = require('../dist/app.module');
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { setupApp } = require('../dist/setup-app');
         const app = await NestFactory.create(AppModule);
         setupApp(app);
         await app.init();
@@ -19,3 +21,4 @@ export default async function handler(req: any, res: any) {
     const server = await getServer();
     return server(req, res);
 }
+
