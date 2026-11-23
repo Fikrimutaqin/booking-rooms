@@ -1,125 +1,332 @@
-# Room Bookings Project: NestJS (v11) + Prisma PostgreSQL (Serverless) + React (Vite) + Docker
+# 🏢 Room Bookings System
 
-Proyek sistem booking ruangan (Room Bookings) ini telah dikonfigurasi lengkap dengan arsitektur modular yang memisahkan Backend, Frontend, dan Docker orchestration.
+Sistem manajemen pemesanan ruangan kantor (*Internal Room Reservation System*) yang dibangun dengan arsitektur modern:
+- **Backend:** [NestJS (v11)](https://nestjs.com/) + [Prisma ORM (v6)](https://www.prisma.io/) + PostgreSQL Serverless + Passport JWT
+- **Frontend:** [React 19](https://react.dev/) + [Vite](https://vitejs.dev/) + [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) (Black & White Minimalist Theme) + [React Router](https://reactrouter.com/)
+- **DevOps / Deployment:** Docker Compose, Multi-stage Builds, Nginx Reverse Proxy, Vercel Serverless Ready
 
 ---
 
-## 📁 Struktur Direktori
+## 📁 Struktur Direktori Proyek
 
-```
-room-bookings/
-├── backend/                  # NestJS v11 + Prisma ORM + ESLint 9 Flat Config
+```text
+booking-rooms/
+├── backend/                       # Aplikasi Backend (NestJS v11 + Prisma ORM)
+│   ├── api/
+│   │   └── index.ts               # Serverless function entrypoint untuk Vercel
 │   ├── prisma/
-│   │   └── schema.prisma     # Model: User, Room, Booking (PostgreSQL Serverless)
+│   │   ├── schema.prisma          # Skema database: User, Room, Booking (PostgreSQL)
+│   │   └── seed.prisma.ts         # Seeder data awal (Admin, Employee, Rooms)
 │   ├── src/
-│   │   ├── prisma/           # PrismaService & PrismaModule
-│   │   ├── app.controller.ts # REST API (/api/health, /api/users, /api/rooms, /api/bookings)
+│   │   ├── auth/                  # Modul Autentikasi (JWT, Passport, Hash Argon2, Guards)
+│   │   │   ├── dto/               # LoginDto, RegisterDto, RefreshTokenDto
+│   │   │   ├── interfaces/        # Auth interfaces
+│   │   │   ├── strategies/        # JwtStrategy
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── auth.service.ts
+│   │   │   └── auth.module.ts
+│   │   ├── bookings/              # Modul Manajemen Booking Ruangan
+│   │   │   ├── dto/               # CreateBookingDto, UpdateBookingDto, QueryBookingDto
+│   │   │   ├── interfaces/        # Booking interfaces
+│   │   │   ├── utils/             # Overlap & conflict booking validation helpers
+│   │   │   ├── validators/        # Custom time validators
+│   │   │   ├── bookings.controller.ts
+│   │   │   ├── bookings.service.ts
+│   │   │   └── bookings.module.ts
+│   │   ├── rooms/                 # Modul Manajemen Ruangan
+│   │   │   ├── dto/               # CreateRoomDto, UpdateRoomDto, QueryRoomDto
+│   │   │   ├── interfaces/        # Room interfaces
+│   │   │   ├── rooms.controller.ts
+│   │   │   ├── rooms.service.ts
+│   │   │   └── rooms.module.ts
+│   │   ├── users/                 # Modul Manajemen Pengguna
+│   │   │   ├── dto/               # CreateUserDto, UpdateUserDto, QueryUserDto
+│   │   │   ├── interfaces/        # User interfaces
+│   │   │   ├── users.controller.ts
+│   │   │   ├── users.service.ts
+│   │   │   └── users.module.ts
+│   │   ├── common/                # Shared Utilities, Decorators, Filters, & Guards
+│   │   │   ├── decorators/        # @CurrentUser(), @Public(), @Roles(), @ResponseMessage()
+│   │   │   ├── filters/           # Global HttpExceptionFilter
+│   │   │   ├── guards/            # JwtAuthGuard, RolesGuard
+│   │   │   ├── interceptors/      # ResponseInterceptor (Standard API JSON output)
+│   │   │   ├── interfaces/        # ApiResponse, JwtPayload, PaginatedResult
+│   │   │   └── utils/             # Hash util (Argon2), Token util, Date helpers
+│   │   ├── prisma/                # Prisma Module & PrismaService
+│   │   ├── app.controller.ts      # Health check endpoint (/v1/health)
 │   │   ├── app.service.ts
-│   │   ├── app.module.ts
-│   │   └── main.ts           # Entry point dengan CORS diaktifkan
-│   ├── .env                  # Environment database (DATABASE_URL & DIRECT_URL)
-│   ├── eslint.config.mjs     # ESLint 9 Flat Config + Prettier
+│   │   ├── app.module.ts          # Root Module
+│   │   ├── setup-app.ts           # Konfigurasi CORS, Global Pipes, Versioning
+│   │   └── main.ts                # Local bootstrap entrypoint
+│   ├── .env.example               # Contoh environment variable backend
+│   ├── eslint.config.mjs          # ESLint 9 Flat Config
+│   ├── nest-cli.json              # Konfigurasi Nest CLI
 │   ├── package.json
-│   └── tsconfig.json
+│   ├── tsconfig.json              # TypeScript configuration & Path aliases
+│   ├── tsconfig.build.json        # Build configuration untuk tsc & tsc-alias
+│   └── vercel.json                # Konfigurasi deployment serverless Vercel
 │
-├── frontend/                 # React 19 + Vite + TypeScript + ESLint
+├── frontend/                      # Aplikasi Frontend (React 19 + Vite + shadcn/ui)
 │   ├── src/
-│   │   ├── App.tsx           # Dashboard Room Bookings & API status
-│   │   ├── App.css
-│   │   ├── index.css
-│   │   └── main.tsx
+│   │   ├── components/
+│   │   │   ├── ui/                # Komponen Primitif shadcn/ui (Black & White Theme)
+│   │   │   │   ├── badge.tsx      # Status Badge (CONFIRMED, PENDING, Available)
+│   │   │   │   ├── button.tsx     # Variant Button (default, outline, ghost, destructive)
+│   │   │   │   ├── card.tsx       # Card, CardHeader, CardTitle, CardContent
+│   │   │   │   ├── input.tsx      # Accessible Input field
+│   │   │   │   ├── label.tsx      # CVA Form Label
+│   │   │   │   └── table.tsx      # Accessible Table (Header, Body, Row, Cell)
+│   │   │   ├── auth/              # Komponen Khusus Autentikasi
+│   │   │   │   └── LoginForm.tsx  # Form login resmi shadcn dengan Show/Hide password
+│   │   │   ├── dashboard/         # Komponen Modular Dashboard
+│   │   │   │   ├── Sidebar.tsx    # Collapsible Sidebar (Bookings, Rooms, Users, Logout)
+│   │   │   │   ├── Header.tsx     # Header bar (Judul, Action Button, Search, Filter)
+│   │   │   │   ├── StatCard.tsx   # Metric card serbaguna (Title, Value, Description, Icon)
+│   │   │   │   ├── BookingsView.tsx # Tampilan & tabel data Bookings
+│   │   │   │   ├── RoomsView.tsx  # Tampilan & tabel data Rooms
+│   │   │   │   └── UsersView.tsx  # Tampilan & tabel data Users
+│   │   │   └── layouts/           # Reusable Layout Shells
+│   │   │       ├── AuthLayout.tsx # Layout container untuk halaman Login
+│   │   │       └── DashboardLayout.tsx # Layout container untuk Dashboard + Sidebar
+│   │   ├── pages/                 # Halaman Utama (Deklaratif & Ringkas)
+│   │   │   ├── LoginPage.tsx      # Halaman Login
+│   │   │   └── DashboardPage.tsx  # Halaman Dashboard
+│   │   ├── types/
+│   │   │   └── dashboard.ts       # Type definitions (TabType, BookingItem, RoomItem, dll)
+│   │   ├── lib/
+│   │   │   └── utils.ts           # Helper cn (clsx + tailwind-merge)
+│   │   ├── App.tsx                # Konfigurasi Routing (react-router-dom)
+│   │   ├── index.css              # Tailwind Base & Token Warna Monokrom (Zinc/Neutral)
+│   │   └── main.tsx               # Client entrypoint React DOM
+│   ├── .env.example               # Contoh environment variable frontend
+│   ├── components.json            # Konfigurasi shadcn/ui CLI
 │   ├── index.html
-│   ├── vite.config.ts        # Vite config dengan proxy API ke NestJS
-│   ├── eslint.config.js      # ESLint 9 React hooks & refresh
-│   └── package.json
+│   ├── package.json
+│   ├── tailwind.config.js         # Konfigurasi Tailwind & Animasi
+│   ├── tsconfig.json
+│   └── vite.config.ts             # Vite configuration & path alias @/
 │
-├── docker/                   # Folder aset Docker
-│   ├── Dockerfile.backend    # Multi-stage Dockerfile untuk NestJS & Prisma
-│   ├── Dockerfile.frontend   # Multi-stage Dockerfile untuk Vite React + Nginx
-│   └── nginx.conf            # Nginx config dengan reverse proxy /api/ -> backend
+├── docker/                        # Aset Kontainerisasi Docker
+│   ├── Dockerfile.backend         # Multi-stage build NestJS & Prisma
+│   ├── Dockerfile.frontend        # Multi-stage build Vite React & Nginx
+│   └── nginx.conf                 # Konfigurasi Nginx reverse proxy
 │
-├── docker-compose.yml        # File Docker Compose untuk menjalankan BE & FE
+├── docker-compose.yml             # Orkestrasi Docker untuk menjalankan BE & FE
 ├── .gitignore
 └── README.md
 ```
 
 ---
 
-## ⚙️ 1. Konfigurasi Database PostgreSQL Serverless
+## 🛠️ Prasyarat Sistem (Prerequisites)
 
-Karena menggunakan PostgreSQL Serverless (**Prisma Postgres**, **Neon**, **Supabase**, atau **Aiven**):
-
-1. Buka file `backend/.env`:
-   ```bash
-   cd backend
-   ```
-2. Isi nilai `DATABASE_URL` (pooled) dan `DIRECT_URL` (direct) di dalam `.env`:
-   ```env
-   DATABASE_URL="postgresql://username:password@ep-sample-123.region.aws.neon.tech/neondb?sslmode=require&connect_timeout=15"
-   DIRECT_URL="postgresql://username:password@ep-sample-123.region.aws.neon.tech/neondb?sslmode=require"
-   ```
-
-3. Jalankan migrasi Prisma untuk membuat tabel `users`, `rooms`, dan `bookings`:
-   ```bash
-   npx prisma migrate dev --name init_room_bookings
-   ```
-
-4. Jalankan Prisma Studio (GUI database):
-   ```bash
-   npx prisma studio
-   ```
+Pastikan lingkungan lokal kamu sudah terpasang:
+* **Node.js**: Versi `20.x` atau `22.x LTS` (Rekomendasi `Node 22`)
+* **NPM**: Versi `9.x` atau lebih baru
+* **PostgreSQL Database**: PostgreSQL Serverless ([Neon.tech](https://neon.tech/), [Supabase](https://supabase.com/), atau PostgreSQL lokal/Docker).
 
 ---
 
-## 🐳 2. Menjalankan Menggunakan Docker
+## 🚀 Panduan Setup & Instalasi Lokal
 
-Cukup satu perintah langsung dari root project:
+### 1. Clone Repositori
 
 ```bash
-cd /Users/fikrimutaqin/Project/room-bookings
+git clone https://github.com/fikrimutaqin/booking-rooms.git
+cd booking-rooms
+```
+
+---
+
+### 2. Setup Backend (NestJS + Prisma)
+
+Buka terminal dan masuk ke folder `backend`:
+
+```bash
+cd backend
+```
+
+#### A. Install Dependensi
+```bash
+npm install
+```
+
+#### B. Konfigurasi Environment Variable
+Salin file `.env.example` menjadi `.env`:
+```bash
+cp .env.example .env
+```
+Buka file `.env` dan sesuaikan nilainya:
+```env
+PORT=3000
+
+# URL Database PostgreSQL (Gunakan Connection Pooler):
+DATABASE_URL="postgresql://username:password@ep-sample-12345.region.aws.neon.tech/neondb?sslmode=require&connect_timeout=15"
+
+# Direct URL khusus untuk migrasi Prisma CLI:
+DIRECT_URL="postgresql://username:password@ep-sample-12345.region.aws.neon.tech/neondb?sslmode=require"
+
+# JWT Secret untuk Autentikasi:
+JWT_SECRET="super-secret-jwt-key-change-this-in-production"
+JWT_EXPIRES_IN="1d"
+```
+
+#### C. Migrasi Database & Generate Client
+Jalankan perintah migrasi untuk membuat tabel database PostgreSQL:
+```bash
+npm run db:migrate
+```
+Generate Prisma Client:
+```bash
+npm run db:generate
+```
+
+#### D. Seed Data Awal (Akun & Ruangan Demo)
+Jalankan seeder untuk mengisi akun Admin, Employee, dan Ruangan contoh:
+```bash
+npm run db:seed
+```
+
+#### E. Menjalankan Backend Dev Server
+```bash
+npm run dev
+```
+Backend akan aktif di: **`http://localhost:3000`** (dengan prefix versi: `http://localhost:3000/v1/health`).
+
+> **Tips GUI Database:** Jalankan `npm run db:studio` untuk membuka Prisma Studio di browser (`http://localhost:5555`).
+
+---
+
+### 3. Setup Frontend (React 19 + shadcn/ui)
+
+Buka tab terminal baru dan masuk ke folder `frontend`:
+
+```bash
+cd frontend
+```
+
+#### A. Install Dependensi
+```bash
+npm install
+```
+
+#### B. Konfigurasi Environment Variable
+Salin file `.env.example` menjadi `.env`:
+```bash
+cp .env.example .env
+```
+Isi file `.env`:
+```env
+VITE_API_URL=http://localhost:3000/v1
+```
+
+#### C. Menjalankan Frontend Dev Server
+```bash
+npm run dev
+```
+Buka browser di: **`http://localhost:5173`**.
+
+---
+
+## 🧭 Halaman & Fitur Frontend
+
+1. **Halaman Login (`/login`)**:
+   - Template resmi **shadcn/ui** dengan palet monokrom hitam putih (Zinc/Neutral).
+   - Form input Email (`autoComplete="username"`) dan Password (`autoComplete="current-password"`).
+   - Fitur toggle **Show / Hide Password** dengan keyboard accessibility.
+   - Klik tombol **Login** untuk langsung masuk ke Dashboard.
+
+2. **Halaman Dashboard (`/dashboard`)**:
+   - **Collapsible Sidebar**: Sidebar di sebelah kiri yang dapat diciutkan (*collapse*) ke mode mini icon-bar (`w-16`) atau diperluas (*expand*) ke ukuran penuh (`w-64`).
+   - **Tab Navigasi Sidebar**:
+     - 📅 **Bookings**: Metrik reservasi dan tabel jadwal pemesanan ruangan dengan status badge (`CONFIRMED`, `PENDING`, `CANCELLED`).
+     - 🚪 **Rooms**: Metrik ruangan dan tabel daftar ruangan (kapasitas, fasilitas, lokasi, status ketersediaan).
+     - 👥 **Users**: Metrik tim dan tabel direktori pengguna (nama, email, role `ADMIN` / `EMPLOYEE`).
+     - 🚪 **Logout**: Tombol di bagian bawah sidebar untuk kembali ke halaman Login.
+   - **Zero Backend Integration**: Berjalan murni di sisi frontend dengan mock data sehingga aman untuk pengujian UI tanpa server aktif.
+
+---
+
+## 🔑 Akun Default Seeder
+
+Data akun berikut dibuat secara otomatis saat menjalankan perintah `npm run db:seed`:
+
+| Role | Email | Password | Hak Akses |
+| :--- | :--- | :--- | :--- |
+| **ADMIN** | `rpl.11.fikrimutaqin@gmail.com` | `Admin123` | Akses penuh: manajemen user, kelola ruangan, approve booking |
+| **EMPLOYEE** | `rpl.11.fikrimutaqin+1@gmail.com` | `Employee123` | Akses reservasi ruangan dan melihat jadwal |
+
+---
+
+## 📡 Daftar Endpoint API Utama (Backend)
+
+Semua endpoint API menggunakan URI versioning `/v1/`:
+
+### 1. Autentikasi (`/v1/auth`)
+* `POST /v1/auth/register` - Pendaftaran akun baru
+* `POST /v1/auth/login` - Login dan mendapatkan Access & Refresh Token
+* `POST /v1/auth/refresh` - Memperbarui Access Token menggunakan Refresh Token
+* `GET /v1/auth/profile` - Mengambil data user yang sedang login (Memerlukan JWT Bearer Token)
+
+### 2. Ruangan (`/v1/rooms`)
+* `GET /v1/rooms` - Mengambil daftar seluruh ruangan (Mendukung pagination & pencarian)
+* `GET /v1/rooms/:id` - Mengambil detail satu ruangan
+* `POST /v1/rooms` - Menambah ruangan baru (*Khusus ADMIN*)
+* `PATCH /v1/rooms/:id` - Memperbarui data ruangan (*Khusus ADMIN*)
+* `DELETE /v1/rooms/:id` - Menghapus ruangan (*Khusus ADMIN*)
+
+### 3. Pemesanan Ruangan (`/v1/bookings`)
+* `GET /v1/bookings` - Mengambil daftar pemesanan ruangan
+* `GET /v1/bookings/:id` - Mengambil detail pemesanan
+* `POST /v1/bookings` - Membuat reservasi ruangan baru (Validasi anti-bentrok jadwal & jam operasional)
+* `PATCH /v1/bookings/:id` - Mengubah jadwal reservasi
+* `DELETE /v1/bookings/:id` - Membatalkan reservasi
+
+### 4. Manajemen Pengguna (`/v1/users`)
+* `GET /v1/users` - Mengambil daftar pengguna (*Khusus ADMIN*)
+* `GET /v1/users/:id` - Mengambil detail pengguna
+* `PATCH /v1/users/:id` - Mengupdate data pengguna
+* `DELETE /v1/users/:id` - Menghapus akun pengguna (*Khusus ADMIN*)
+
+### 5. Health Check
+* `GET /v1/health` - Cek status koneksi server dan database PostgreSQL
+
+---
+
+## 🐳 Menjalankan via Docker Compose
+
+Jika kamu memiliki Docker terpasang, seluruh sistem (Backend, Frontend, dan Nginx Reverse Proxy) dapat dijalankan hanya dengan satu perintah dari root folder:
+
+```bash
 docker compose up --build
 ```
 
-Docker Compose secara otomatis membaca environment variable dari file `backend/.env`.
-
-### URL Akses:
-- **Frontend (Web UI)**: [http://localhost](http://localhost) atau [http://localhost:5173](http://localhost:5173)
-- **Backend (Health Check)**: [http://localhost:3000/api/health](http://localhost:3000/api/health)
-- **API Users**: [http://localhost:3000/api/users](http://localhost:3000/api/users)
-- **API Rooms**: [http://localhost:3000/api/rooms](http://localhost:3000/api/rooms)
-- **API Bookings**: [http://localhost:3000/api/bookings](http://localhost:3000/api/bookings)
+### Akses Port Docker:
+* **Frontend (Aplikasi Web)**: [http://localhost](http://localhost) atau [http://localhost:5173](http://localhost:5173)
+* **Backend API Langsung**: [http://localhost:3000/v1/health](http://localhost:3000/v1/health)
 
 ---
 
-## 💻 3. Menjalankan Secara Lokal (Development Tanpa Docker)
+## ☁️ Catatan Deployment ke Vercel (Backend Serverless)
 
-### Backend (NestJS):
-```bash
-cd backend
-npm install
-npx prisma generate
-npm run start:dev
-```
-
-### Frontend (React Vite):
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Saat men-deploy folder `backend` ke **Vercel**:
+1. Di Dashboard Vercel, masuk ke **Project Settings** -> **General** -> Atur **Root Directory** ke folder **`backend`**.
+2. Masukkan Environment Variables di Vercel: `DATABASE_URL`, `DIRECT_URL`, dan `JWT_SECRET`.
+3. Script build di `backend/package.json` sudah diatur otomatis menjalankan `prisma generate && nest build && tsc-alias -p tsconfig.build.json` untuk menjamin engine binary Prisma Linux dan path alias TypeScript ter-compile dengan aman.
 
 ---
 
-## 🔍 4. Standardisasi Code dengan ESLint
+## 🧹 Linting & Formatting Kode
 
-- **Backend Linting**:
+* **Backend:**
   ```bash
   cd backend
-  npm run lint       # Cek & autofix standardisasi kode
+  npm run lint       # Menjalankan ESLint 9 Flat Config autofix
   npm run format     # Format kode dengan Prettier
   ```
-- **Frontend Linting**:
+* **Frontend:**
   ```bash
   cd frontend
-  npm run lint       # Cek standar kode React & TypeScript
+  npm run lint       # Cek standar kode React 19 & TypeScript
+  npm run build      # Verifikasi type checking & Vite production bundle
   ```
