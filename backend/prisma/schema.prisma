@@ -28,6 +28,7 @@ model User {
   bookings  Booking[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  refreshToken String? @map("refresh_token")
 
   @@map("users")
 }
@@ -39,6 +40,7 @@ model Room {
   capacity    Int       @default(1)
   facilities  Json      @default("[]")
   location    String?
+  isAvailable Boolean  @default(true)
   bookings    Booking[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt

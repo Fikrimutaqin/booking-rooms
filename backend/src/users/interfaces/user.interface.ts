@@ -1,8 +1,9 @@
-import { UserRole } from "../../common/enums/user-role.enum";
+import { Role } from "@prisma/client";
 
 export interface User {
+    id?: string;
     email: string;
-    password: string;
+    password?: string;
     name: string;
-    role: UserRole;
+    role: Role;
 }
