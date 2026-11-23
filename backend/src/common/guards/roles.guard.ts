@@ -1,17 +1,22 @@
+// Core Nest and Other Core
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
-import { ROLES_KEY } from '../decorators/roles.decorator';
-import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
+
+// Import Interfaces and Types
+import { AuthenticatedRequest } from '@common/interfaces/authenticated-request.interface';
+
+// Import Others (Common etc)
+import { ROLES_KEY } from '@common/decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
   // Contructor for reflector
-  constructor(private reflector: Reflector) { }
+  constructor(private reflector: Reflector) {}
 
   /**
    * Can Active it's mean user active can access by roles
-   * @param context 
+   * @param context
    * @returns boolean
    */
   canActivate(context: ExecutionContext): boolean {
@@ -25,9 +30,7 @@ export class RolesGuard implements CanActivate {
     if (!required) return true;
 
     // Get authenticated user
-    const { user } = context
-      .switchToHttp()
-      .getRequest<AuthenticatedRequest>();
+    const { user } = context.switchToHttp().getRequest<AuthenticatedRequest>();
     return required.includes(user.role);
   }
 }

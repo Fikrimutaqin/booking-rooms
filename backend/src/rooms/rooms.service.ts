@@ -1,110 +1,156 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { QueryRoomDto } from './dto/query-room.dto';
-import { AvailabilityQueryDto } from './dto/availability-query.dto';
-import { startOfDayWib } from 'src/common/utils/time.util';
-import { CreateRoomDto } from './dto/room.dto';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
-import { UserRole } from 'src/common/enums/user-role.enum';
+// Core Nest and Other Core
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { BookingStatus, Prisma, Room } from '@prisma/client';
+
+// Import Services
+import { PrismaService } from '@prisma/prisma.service';
+
+// Import DTOs
+import { CreateRoomDto } from './dto/create-room.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
-import { BookingStatus } from '@prisma/client';
+import { QueryRoomDto } from './dto/query-room.dto';
+
+// Import Interfaces and Types
+import { RoomAvailability } from './interfaces/room-availability.interface';
+import { PaginatedResult } from '@common/interfaces/paginated-result.interface';
+
+// Import Others (Common etc)
+import { startOfDayWib } from '@common/utils/time.util';
+import { PaginationParams } from '@common/decorators/paginate.decorator';
 
 @Injectable()
 export class RoomsService {
-    constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
-    /**
-     * 
-     * @param query - filter and sort query
-     * @param pagination - pagination query
-     * @returns 
-     */
-    async findAll(query: QueryRoomDto, pagination: { page: number; limit: number; skip: number }) {
-        const [data, total] = await Promise.all([
-            this.prisma.room.findMany({
-                where: query.minCapacity !== undefined ? { capacity: { gte: query.minCapacity } } : undefined,
-                orderBy: query.order ? { name: query.order } : { createdAt: 'desc' },
-                skip: pagination.skip,
-                take: pagination.limit || 20,
-            }),
-            this.prisma.room.count({ where: query.minCapacity !== undefined ? { capacity: { gte: query.minCapacity } } : undefined }),
-        ]);
+  /**
+   * Find all rooms with query filters and pagination
+   * @param query filter and sort query
+   * @param pagination pagination query
+   * @returns Paginated list of rooms
+   */
+  async findAll(
+    query: QueryRoomDto,
+    pagination: PaginationParams,
+  ): Promise<PaginatedResult<Room>> {
+    const where: Prisma.RoomWhereInput = {
+      ...(query?.minCapacity !== undefined && {
+        capacity: { gte: query.minCapacity },
+      }),
+    };
 
-        return {
-            data,
-            meta: {
-                total,
-                page: pagination.page,
-                limit: pagination.limit,
-            },
-        };
-    }
+    const [data, total] = await Promise.all([
+      this.prisma.room.findMany({
+        where,
+        orderBy: query?.order ? { name: query.order } : { createdAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.limit || 20,
+      }),
+      this.prisma.room.count({ where }),
+    ]);
 
-    /**
-     * Get room availability
-     * @param roomId - ID of the room
-     * @param date - Date in YYYY-MM-DD format
-     * @returns Promise<Room Availability>
-     */
-    async availability(roomId: string, date: string) {
-        const room = await this.prisma.room.findUnique({
-            where: { id: roomId },
-            select: { id: true }
-        })
+    return {
+      data,
+      meta: {
+        total,
+        page: pagination.page,
+        limit: pagination.limit,
+      },
+    };
+  }
 
-        if (!room) throw new NotFoundException('Room Not Found...')
+  /**
+   * Get room by ID
+   * @param id Room ID
+   * @returns Room details
+   */
+  async findOne(id: string): Promise<Room> {
+    const room = await this.prisma.room.findUnique({
+      where: { id },
+    });
 
-        const dayStart = startOfDayWib(date); // Get start of day WIB
-        const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000); // Get end of day WIB
+    if (!room) throw new NotFoundException('Room not found...');
+    return room;
+  }
 
-        // Find bookings that overlap with the given date
-        const bookings = await this.prisma.booking.findMany({
-            where: {
-                roomId: roomId,
-                startAt: { lt: dayEnd }, // Booking must start before day end
-                endAt: { gt: dayStart }, // Booking must end after day start
-                status: { not: BookingStatus.CANCELLED },
-            },
-            select: { id: true, title: true, startAt: true, endAt: true },
-            orderBy: { startAt: 'desc' },
-        });
+  /**
+   * Get room availability
+   * @param roomId ID of the room
+   * @param date Date in YYYY-MM-DD format
+   * @returns Room availability and bookings
+   */
+  async availability(roomId: string, date: string): Promise<RoomAvailability> {
+    const room = await this.prisma.room.findUnique({
+      where: { id: roomId },
+      select: { id: true },
+    });
 
-        return {
-            room,
-            date: date,
-            workingHours: { start: '08:00', end: '18:00', timezone: 'Asia/Jakarta' },
-            bookings,
-        };
-    }
+    if (!room) throw new NotFoundException('Room not found...');
 
-    /**
-     * Create new room
-     * @param dto - Room data
-     * @returns Promise<Room>
-     * @param user - Current user
-     */
-    async create(@CurrentUser() user, dto: CreateRoomDto) {
-        // validate user role
-        if (user.role !== UserRole.ADMIN) throw new ForbiddenException('You are not authorized to create room');
-        return await this.prisma.room.create({ data: dto });
-    }
+    const dayStart = startOfDayWib(date); // Get start of day WIB
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000); // Get end of day WIB
 
-    /**
-     * Update room
-     * @param user - Current user
-     * @param dto - Room data
-     * @returns Promise<Room>
-     */
-    async update(@CurrentUser() user, dto: UpdateRoomDto) {
-        // validate user role
-        if (user.role !== UserRole.ADMIN) throw new ForbiddenException('You are not authorized to update room');
-        const room = await this.prisma.room.findUnique({
-            where: { id: dto.id },
-            select: { id: true }
-        })
-        // check room exist
-        if (!room) throw new NotFoundException('Room Not Found...');
-        // update room
-        return await this.prisma.room.update({ where: { id: dto.id }, data: dto });
-    }
+    // Find bookings that overlap with the given date
+    const bookings = await this.prisma.booking.findMany({
+      where: {
+        roomId: roomId,
+        startAt: { lt: dayEnd }, // Booking must start before day end
+        endAt: { gt: dayStart }, // Booking must end after day start
+        status: { not: BookingStatus.CANCELLED },
+      },
+      select: { id: true, title: true, startAt: true, endAt: true },
+      orderBy: { startAt: 'desc' },
+    });
+
+    return {
+      room,
+      date: date,
+      workingHours: { start: '08:00', end: '18:00', timezone: 'Asia/Jakarta' },
+      bookings,
+    };
+  }
+
+  /**
+   * Create new room
+   * @param dto Room data
+   * @returns Created room
+   */
+  async create(dto: CreateRoomDto): Promise<Room> {
+    return await this.prisma.room.create({ data: dto });
+  }
+
+  /**
+   * Update room
+   * @param id Room ID
+   * @param dto Room data
+   * @returns Updated room
+   */
+  async update(id: string, dto: UpdateRoomDto): Promise<Room> {
+    const room = await this.prisma.room.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!room) throw new NotFoundException('Room not found...');
+
+    return await this.prisma.room.update({
+      where: { id },
+      data: dto,
+    });
+  }
+
+  /**
+   * Remove room
+   * @param id Room ID
+   * @returns Deleted room
+   */
+  async remove(id: string): Promise<Room> {
+    const room = await this.prisma.room.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!room) throw new NotFoundException('Room not found...');
+
+    return await this.prisma.room.delete({
+      where: { id },
+    });
+  }
 }

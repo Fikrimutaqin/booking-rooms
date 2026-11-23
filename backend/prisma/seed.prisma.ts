@@ -1,6 +1,5 @@
-import { PrismaClient } from "@prisma/client";
-import { UserRole } from "../src/common/enums/user-role.enum";
-import { hashPassword } from "../src/common/utils/hash.util";
+import { PrismaClient, Role } from "@prisma/client";
+import { hashPassword } from "@common/utils/hash.util";
 
 const prisma = new PrismaClient();
 
@@ -13,13 +12,13 @@ export async function main() {
             email: 'rpl.11.fikrimutaqin@gmail.com',
             name: 'Fikri Admin',
             password: await hashPassword('Admin123'),
-            role: UserRole.ADMIN,
+            role: Role.ADMIN,
         },
         {
             email: 'rpl.11.fikrimutaqin+1@gmail.com',
             name: 'Fikri Employee',
             password: await hashPassword('Employee123'),
-            role: UserRole.EMPLOYEE,
+            role: Role.EMPLOYEE,
         },
     ];
 

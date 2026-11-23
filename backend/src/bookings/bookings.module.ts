@@ -1,9 +1,19 @@
+// Core Nest and Other Core
 import { Module } from '@nestjs/common';
-import { BookingsService } from './bookings.service';
+
+// Import Modules
+
+// Import Controllers
 import { BookingsController } from './bookings.controller';
 
+// Import Services
+import { BookingsService } from './bookings.service';
+
+// Import Others (Common etc)
+
 @Module({
+  controllers: [BookingsController],
   providers: [BookingsService],
-  controllers: [BookingsController]
+  exports: [BookingsService],
 })
 export class BookingsModule {}
