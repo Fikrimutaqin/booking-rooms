@@ -106,7 +106,7 @@ booking-rooms/
 │   │   │   ├── interfaces/        # ApiResponse, JwtPayload, PaginatedResult
 │   │   │   └── utils/             # Hash util (Argon2), Token util, Date helpers
 │   │   ├── prisma/                # Prisma Module & PrismaService
-│   │   ├── app.controller.ts      # Health check endpoint (/v1/health)
+│   │   ├── app.controller.ts      # Health check endpoint (/api/v1/health)
 │   │   ├── app.service.ts
 │   │   ├── app.module.ts          # Root Module
 │   │   ├── setup-app.ts           # Konfigurasi CORS, Global Pipes, Versioning
@@ -244,7 +244,7 @@ npm run db:seed
 ```bash
 npm run dev
 ```
-Backend akan aktif di: **`http://localhost:3000`** (dengan prefix versi: `http://localhost:3000/v1/health`).
+Backend akan aktif di: **`http://localhost:3000`** (dengan prefix API: `http://localhost:3000/api/v1/health`).
 
 > **Tips GUI Database:** Jalankan `npm run db:studio` untuk membuka Prisma Studio di browser (`http://localhost:5555`).
 
@@ -313,36 +313,36 @@ Data akun berikut dibuat secara otomatis saat menjalankan perintah `npm run db:s
 
 ## 📡 Daftar Endpoint API Utama (Backend)
 
-Semua endpoint API menggunakan URI versioning `/v1/`:
+Semua endpoint API menggunakan URI prefix dan versioning `/api/v1/`:
 
-### 1. Autentikasi (`/v1/auth`)
-* `POST /v1/auth/register` - Pendaftaran akun baru
-* `POST /v1/auth/login` - Login dan mendapatkan Access & Refresh Token
-* `POST /v1/auth/refresh` - Memperbarui Access Token menggunakan Refresh Token
-* `GET /v1/auth/profile` - Mengambil data user yang sedang login (Memerlukan JWT Bearer Token)
+### 1. Autentikasi (`/api/v1/auth`)
+* `POST /api/v1/auth/register` - Pendaftaran akun baru
+* `POST /api/v1/auth/login` - Login dan mendapatkan Access & Refresh Token
+* `POST /api/v1/auth/refresh` - Memperbarui Access Token menggunakan Refresh Token
+* `GET /api/v1/auth/profile` - Mengambil data user yang sedang login (Memerlukan JWT Bearer Token)
 
-### 2. Ruangan (`/v1/rooms`)
-* `GET /v1/rooms` - Mengambil daftar seluruh ruangan (Mendukung pagination & pencarian)
-* `GET /v1/rooms/:id` - Mengambil detail satu ruangan
-* `POST /v1/rooms` - Menambah ruangan baru (*Khusus ADMIN*)
-* `PATCH /v1/rooms/:id` - Memperbarui data ruangan (*Khusus ADMIN*)
-* `DELETE /v1/rooms/:id` - Menghapus ruangan (*Khusus ADMIN*)
+### 2. Ruangan (`/api/v1/rooms`)
+* `GET /api/v1/rooms` - Mengambil daftar seluruh ruangan (Mendukung pagination & pencarian)
+* `GET /api/v1/rooms/:id` - Mengambil detail satu ruangan
+* `POST /api/v1/rooms` - Menambah ruangan baru (*Khusus ADMIN*)
+* `PATCH /api/v1/rooms/:id` - Memperbarui data ruangan (*Khusus ADMIN*)
+* `DELETE /api/v1/rooms/:id` - Menghapus ruangan (*Khusus ADMIN*)
 
-### 3. Pemesanan Ruangan (`/v1/bookings`)
-* `GET /v1/bookings` - Mengambil daftar pemesanan ruangan
-* `GET /v1/bookings/:id` - Mengambil detail pemesanan
-* `POST /v1/bookings` - Membuat reservasi ruangan baru (Validasi anti-bentrok jadwal & jam operasional)
-* `PATCH /v1/bookings/:id` - Mengubah jadwal reservasi
-* `DELETE /v1/bookings/:id` - Membatalkan reservasi
+### 3. Pemesanan Ruangan (`/api/v1/bookings`)
+* `GET /api/v1/bookings` - Mengambil daftar pemesanan ruangan
+* `GET /api/v1/bookings/:id` - Mengambil detail pemesanan
+* `POST /api/v1/bookings` - Membuat reservasi ruangan baru (Validasi anti-bentrok jadwal & jam operasional)
+* `PATCH /api/v1/bookings/:id` - Mengubah jadwal reservasi
+* `DELETE /api/v1/bookings/:id` - Membatalkan reservasi
 
-### 4. Manajemen Pengguna (`/v1/users`)
-* `GET /v1/users` - Mengambil daftar pengguna (*Khusus ADMIN*)
-* `GET /v1/users/:id` - Mengambil detail pengguna
-* `PATCH /v1/users/:id` - Mengupdate data pengguna
-* `DELETE /v1/users/:id` - Menghapus akun pengguna (*Khusus ADMIN*)
+### 4. Manajemen Pengguna (`/api/v1/users`)
+* `GET /api/v1/users` - Mengambil daftar pengguna (*Khusus ADMIN*)
+* `GET /api/v1/users/:id` - Mengambil detail pengguna
+* `PATCH /api/v1/users/:id` - Mengupdate data pengguna
+* `DELETE /api/v1/users/:id` - Menghapus akun pengguna (*Khusus ADMIN*)
 
 ### 5. Health Check
-* `GET /v1/health` - Cek status koneksi server dan database PostgreSQL
+* `GET /api/v1/health` - Cek status koneksi server dan database PostgreSQL
 
 ---
 
@@ -356,7 +356,7 @@ docker compose up --build
 
 ### Akses Port Docker:
 * **Frontend (Aplikasi Web)**: [http://localhost](http://localhost) atau [http://localhost:5173](http://localhost:5173)
-* **Backend API Langsung**: [http://localhost:3000/v1/health](http://localhost:3000/v1/health)
+* **Backend API Langsung**: [http://localhost:3000/api/v1/health](http://localhost:3000/api/v1/health)
 
 ---
 

@@ -8,6 +8,9 @@ export function setupApp(app: INestApplication) {
         credentials: true,
     });
 
+    // Set global prefix to strictly /api
+    app.setGlobalPrefix('api');
+
     app.enableVersioning({
         type: VersioningType.URI,
         defaultVersion: '1',
