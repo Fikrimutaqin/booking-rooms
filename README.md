@@ -7,6 +7,59 @@ Sistem manajemen pemesanan ruangan kantor (*Internal Room Reservation System*) y
 
 ---
 
+## 🤖 Peran & Bantuan AI dalam Proyek Ini (AI-Assisted Engineering)
+
+Proyek ini dikembangkan dengan kolaborasi bersama **AI Assistant** untuk mempercepat proses *engineering*, memvalidasi keputusan arsitektur, dan menyelesaikan tantangan teknis kompleks baik di sisi Backend maupun Frontend.
+
+Berikut adalah 3 area utama di mana AI memberikan kontribusi krusial dalam proyek ini:
+
+### 1. ⚙️ Setup & Pemecahan Masalah Lingkungan (Backend & Frontend)
+* **Arsitektur Modular & Monorepo**: AI membantu menginisialisasi dan menata struktur folder terpisah yang rapi dan terstandarisasi antara Backend (NestJS v11 + Prisma ORM) dan Frontend (React 19 + Vite + TypeScript), lengkap dengan konfigurasi ESLint 9 Flat Config dan Docker orchestration.
+* **Resolusi Kompatibilitas Serverless & Modul CommonJS (Vercel)**:
+  * Mengatasi kendala kritis `[ERR_REQUIRE_ESM]` pada environment AWS Lambda / Vercel Serverless Function yang disebabkan oleh rilis package NestJS v12 yang berpindah ke *pure ESM* (`@nestjs/mapped-types`, `@nestjs/jwt`, `@nestjs/passport`).
+  * Memperbaiki resolusi import path alias `@prisma/*` agar tidak bertabrakan dengan *npm scope package* di Vercel bundler, serta memastikan eksekusi `prisma generate` berjalan otomatis pada tahapan build cloud.
+* **DevOps & Kontainerisasi**: Menyusun `Dockerfile` *multi-stage build* yang optimal serta konfigurasi `docker-compose.yml` lengkap dengan Nginx *reverse proxy*.
+---
+
+#### 2: Integritas Mutlak di Tingkat Database (PostgreSQL Exclusion Constraint)
+Untuk menjamin integritas data secara mutlak dan tahan terhadap lonjakan *traffic* tinggi, AI merekomendasikan dan menerapkan **PostgreSQL Exclusion Constraint** menggunakan ekstensi `btree_gist`:
+```sql
+-- Mengaktifkan ekstensi btree_gist untuk mendukung pengindeksan gabungan tipe data dasar & rentang waktu
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+-- Memastikan waktu selesai selalu lebih besar dari waktu mulai
+ALTER TABLE "bookings"
+  ADD CONSTRAINT "bookings_end_after_start" CHECK ("end_at" > "start_at");
+
+-- Constraint inti pencegah jadwal bentrok (Exclusion Constraint)
+ALTER TABLE "bookings"
+  ADD CONSTRAINT "no_overlapping_bookings"
+  EXCLUDE USING gist (
+    "room_id" WITH =,
+    tstzrange("start_at", "end_at") WITH &&
+  );
+```
+* **Cara Kerja Constraint:** 
+  Operator `tstzrange("start_at", "end_at") WITH &&` mengevaluasi irisan waktu (*time overlap*). Jika ada transaksi baru dengan `room_id` yang sama dan memiliki rentang waktu yang bertabrakan dengan data yang sudah ada, PostgreSQL akan langsung membatalkan transaksi secara atomik di tingkat ACID dan memunculkan error kode `23P01` (*exclusion_violation*).
+* **Graceful Error Translation:**
+  Pada backend NestJS, AI menambahkan helper `isOverlapError(error)` yang menangkap kode error PostgreSQL `23P01` atau pesan constraint `no_overlapping_bookings`, kemudian menerjemahkannya secara elegan menjadi respons HTTP standar `409 Conflict`.
+
+---
+
+### 3. 🎨 Perancangan UI/UX & Komponen Modular shadcn/ui (Frontend)
+* **Tema Minimalis Hitam-Putih (*Monochrome Black & White*)**:
+  * Mengonfigurasi seluruh token Tailwind CSS dan variabel warna shadcn/ui (`Zinc`/`Neutral`) agar tampil elegan, clean, dan profesional tanpa saturasi warna yang mencolok.
+* **Template Halaman Login**:
+  * Merancang antarmuka login yang *accessible* dengan validasi form, atribut autocomplete semantik, serta fitur interaktif toggle **Show / Hide Password** dengan keyboard accessibility.
+* **Template Dashboard & Collapsible Sidebar**:
+  * Membangun layout dashboard modern dengan **Collapsible Sidebar** yang dapat diciutkan (*collapse*) menjadi mode ramping (*mini icon-bar* `w-16`) atau diperluas (*expand* `w-64`) secara mulus.
+  * Menyediakan 4 menu navigasi utama: **Bookings**, **Rooms**, **Users**, dan **Logout**.
+* **Arsitektur Komponen yang Rapi & Reusable**:
+  * AI merefaktor kode monolitik menjadi komponen-komponen kecil yang terisolasi dan mudah digunakan kembali:
+    * `AuthLayout` & `DashboardLayout` sebagai shell kerangka halaman.
+    * `Sidebar`, `Header`, dan `StatCard` sebagai komponen dashboard serbaguna.
+    * `BookingsView`, `RoomsView`, dan `UsersView` yang dilengkapi tabel data semantik dan status badge.
+
 ## 📁 Struktur Direktori Proyek
 
 ```text
