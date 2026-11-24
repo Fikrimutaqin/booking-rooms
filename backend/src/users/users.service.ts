@@ -7,7 +7,7 @@ import {
 import { Prisma } from '@prisma/client';
 
 // Import Services
-import { PrismaService } from '@prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 // Import DTOs
 import { CreateUserDto } from './dto/create-user.dto';

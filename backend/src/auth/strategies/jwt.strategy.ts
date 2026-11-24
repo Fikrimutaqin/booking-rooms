@@ -5,7 +5,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 // Import Services
-import { PrismaService } from '@prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 // Import Interfaces and Types
 import { JwtPayload } from '@common/interfaces/jwt-payload.interface';

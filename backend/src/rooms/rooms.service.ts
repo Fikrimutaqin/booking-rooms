@@ -3,7 +3,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BookingStatus, Prisma, Room } from '@prisma/client';
 
 // Import Services
-import { PrismaService } from '@prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 // Import DTOs
 import { CreateRoomDto } from './dto/create-room.dto';

@@ -5,10 +5,10 @@ import { JwtService } from '@nestjs/jwt';
 import type { StringValue } from 'ms';
 
 // Import Services
-import { PrismaService } from '@prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 // Import Interfaces and Types
-import { User } from '@users/interfaces/user.interface';
+import { User } from '../../users/interfaces/user.interface';
 import { JwtPayload } from '@common/interfaces/jwt-payload.interface';
 
 // Import Others (Common etc)

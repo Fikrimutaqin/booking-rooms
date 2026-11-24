@@ -8,7 +8,7 @@ import {
 import { Booking, BookingStatus, Prisma, Role } from '@prisma/client';
 
 // Import Services
-import { PrismaService } from '@prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 // Import DTOs
 import { CreateBookingDto } from './dto/create-booking.dto';

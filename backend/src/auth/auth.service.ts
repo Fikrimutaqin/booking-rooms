@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 
 // Import Services
-import { PrismaService } from '@prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 // Import DTOs
 import { RegisterDto } from './dto/register.dto';
