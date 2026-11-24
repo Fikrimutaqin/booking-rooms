@@ -4,7 +4,6 @@ import {
   DoorOpen,
   Users,
   LogOut,
-  Building2,
   PanelLeftClose,
   PanelLeftOpen,
 } from 'lucide-react';

@@ -15,7 +15,7 @@ import {
   IsNotInPast,
   IsWithinWorkingHours,
 } from '../validators/booking-time.validators';
-import { toDate } from '@common/utils/to-date.util';
+import { toDate } from '../../common/utils/to-date.util';
 
 export class CreateBookingDto {
   /**

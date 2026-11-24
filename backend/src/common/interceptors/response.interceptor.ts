@@ -10,10 +10,10 @@ import { Response } from 'express';
 import { map, Observable } from 'rxjs';
 
 // Import Interfaces and Types
-import { ApiResponse } from '@common/interfaces/api-response.interface';
+import { ApiResponse } from '../interfaces/api-response.interface';
 
 // Import Others (Common etc)
-import { RESPONSE_MESSAGE_KEY } from '@common/decorators/response-message.decorator';
+import { RESPONSE_MESSAGE_KEY } from '../decorators/response-message.decorator';
 
 @Injectable()
 export class ResponseInterceptor<T> implements NestInterceptor<

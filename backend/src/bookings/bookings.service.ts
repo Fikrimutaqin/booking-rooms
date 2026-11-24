@@ -20,13 +20,13 @@ import {
   BookingDetail,
   BookingWithRoom,
 } from './interfaces/booking-response.interface';
-import { PaginatedResult } from '@common/interfaces/paginated-result.interface';
-import { JwtPayload } from '@common/interfaces/jwt-payload.interface';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
+import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 // Import Others (Common etc)
 import { isOverlapError } from './utils/overlap-booking.util';
 import { conflict } from './utils/conflict-booking.util';
-import { PaginationParams } from '@common/decorators/paginate.decorator';
+import { PaginationParams } from '../common/decorators/paginate.decorator';
 
 @Injectable()
 export class BookingsService {

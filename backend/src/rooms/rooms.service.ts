@@ -12,11 +12,11 @@ import { QueryRoomDto } from './dto/query-room.dto';
 
 // Import Interfaces and Types
 import { RoomAvailability } from './interfaces/room-availability.interface';
-import { PaginatedResult } from '@common/interfaces/paginated-result.interface';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
 // Import Others (Common etc)
-import { startOfDayWib } from '@common/utils/time.util';
-import { PaginationParams } from '@common/decorators/paginate.decorator';
+import { startOfDayWib } from '../common/utils/time.util';
+import { PaginationParams } from '../common/decorators/paginate.decorator';
 
 @Injectable()
 export class RoomsService {

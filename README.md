@@ -17,7 +17,7 @@ Berikut adalah 3 area utama di mana AI memberikan kontribusi krusial dalam proye
 * **Arsitektur Modular & Monorepo**: AI membantu menginisialisasi dan menata struktur folder terpisah yang rapi dan terstandarisasi antara Backend (NestJS v11 + Prisma ORM) dan Frontend (React 19 + Vite + TypeScript), lengkap dengan konfigurasi ESLint 9 Flat Config dan Docker orchestration.
 * **Resolusi Kompatibilitas Serverless & Modul CommonJS (Vercel)**:
   * Mengatasi kendala kritis `[ERR_REQUIRE_ESM]` pada environment AWS Lambda / Vercel Serverless Function yang disebabkan oleh rilis package NestJS v12 yang berpindah ke *pure ESM* (`@nestjs/mapped-types`, `@nestjs/jwt`, `@nestjs/passport`).
-  * Memperbaiki resolusi import path alias `@prisma/*` agar tidak bertabrakan dengan *npm scope package* di Vercel bundler, serta memastikan eksekusi `prisma generate` berjalan otomatis pada tahapan build cloud.
+  * Memperbaiki import modul dengan beralih ke *relative paths* murni (`../` & `./`) dan menghapus seluruh *path aliases* TypeScript (`@common/*`, `@prisma/*`, dsb) agar tidak terjadi kegagalan modul di Vercel Serverless Function, serta memastikan eksekusi `prisma generate` berjalan otomatis pada tahapan build cloud.
 * **DevOps & Kontainerisasi**: Menyusun `Dockerfile` *multi-stage build* yang optimal serta konfigurasi `docker-compose.yml` lengkap dengan Nginx *reverse proxy*.
 ---
 
@@ -115,8 +115,8 @@ booking-rooms/
 │   ├── eslint.config.mjs          # ESLint 9 Flat Config
 │   ├── nest-cli.json              # Konfigurasi Nest CLI
 │   ├── package.json
-│   ├── tsconfig.json              # TypeScript configuration & Path aliases
-│   ├── tsconfig.build.json        # Build configuration untuk tsc & tsc-alias
+│   ├── tsconfig.json              # TypeScript configuration
+│   ├── tsconfig.build.json        # Build configuration untuk tsc
 │   └── vercel.json                # Konfigurasi deployment serverless Vercel
 │
 ├── frontend/                      # Aplikasi Frontend (React 19 + Vite + shadcn/ui)
@@ -365,7 +365,7 @@ docker compose up --build
 Saat men-deploy folder `backend` ke **Vercel**:
 1. Di Dashboard Vercel, masuk ke **Project Settings** -> **General** -> Atur **Root Directory** ke folder **`backend`**.
 2. Masukkan Environment Variables di Vercel: `DATABASE_URL`, `DIRECT_URL`, dan `JWT_SECRET`.
-3. Script build di `backend/package.json` sudah diatur otomatis menjalankan `prisma generate && nest build && tsc-alias -p tsconfig.build.json` untuk menjamin engine binary Prisma Linux dan path alias TypeScript ter-compile dengan aman.
+3. Script build di `backend/package.json` sudah diatur otomatis menjalankan `prisma generate && nest build` dan seluruh modul menggunakan *relative import paths* untuk menjamin eksekusi serverless tanpa masalah resolusi alias.
 
 ---
 

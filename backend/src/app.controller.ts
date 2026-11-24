@@ -11,8 +11,8 @@ import {
 import { AppService } from './app.service';
 
 // Import Others (Common etc)
-import { Public } from '@common/decorators/public.decorator';
-import { ResponseMessage } from '@common/decorators/response-message.decorator';
+import { Public } from './common/decorators/public.decorator';
+import { ResponseMessage } from './common/decorators/response-message.decorator';
 
 @Controller({
   path: 'health',

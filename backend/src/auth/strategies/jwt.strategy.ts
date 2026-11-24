@@ -8,7 +8,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 
 // Import Interfaces and Types
-import { JwtPayload } from '@common/interfaces/jwt-payload.interface';
+import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 
 // Import Others (Common etc)
 

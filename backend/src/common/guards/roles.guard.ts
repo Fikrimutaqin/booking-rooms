@@ -4,10 +4,10 @@ import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 
 // Import Interfaces and Types
-import { AuthenticatedRequest } from '@common/interfaces/authenticated-request.interface';
+import { AuthenticatedRequest } from '../interfaces/authenticated-request.interface';
 
 // Import Others (Common etc)
-import { ROLES_KEY } from '@common/decorators/roles.decorator';
+import { ROLES_KEY } from '../decorators/roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {

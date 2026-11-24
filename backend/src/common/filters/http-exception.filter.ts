@@ -10,7 +10,7 @@ import {
 import { Request, Response } from 'express';
 
 // Import Interfaces and Types
-import { ApiErrorResponse } from '@common/interfaces/api-response.interface';
+import { ApiErrorResponse } from '../interfaces/api-response.interface';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {

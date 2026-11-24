@@ -16,11 +16,11 @@ import { UpdateUserDto } from './dto/update-user.dto';
 
 // Import Interfaces and Types
 import { SafeUser } from './interfaces/user.interface';
-import { PaginatedResult } from '@common/interfaces/paginated-result.interface';
+import { PaginatedResult } from '../common/interfaces/paginated-result.interface';
 
 // Import Others (Common etc)
-import { hashPassword } from '@common/utils/hash.util';
-import { PaginationParams } from '@common/decorators/paginate.decorator';
+import { hashPassword } from '../common/utils/hash.util';
+import { PaginationParams } from '../common/decorators/paginate.decorator';
 
 // Omit password and refreshToken from the response
 const SAFE_OMIT = { password: true, refreshToken: true } as const;

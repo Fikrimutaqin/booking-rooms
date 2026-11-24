@@ -17,12 +17,12 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 // Import Interfaces and Types
-import { JwtPayload } from '@common/interfaces/jwt-payload.interface';
+import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 // Import Others (Common etc)
-import { Public } from '@common/decorators/public.decorator';
-import { ResponseMessage } from '@common/decorators/response-message.decorator';
-import { CurrentUser } from '@common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller({ version: '1', path: 'auth' })
 export class AuthController {

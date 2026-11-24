@@ -22,15 +22,15 @@ import { QueryBookingDto } from './dto/query-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 
 // Import Interfaces and Types
-import { JwtPayload } from '@common/interfaces/jwt-payload.interface';
+import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 // Import Others (Common etc)
-import { CurrentUser } from '@common/decorators/current-user.decorator';
-import { ResponseMessage } from '@common/decorators/response-message.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
 import {
   Paginate,
   PaginationParams,
-} from '@common/decorators/paginate.decorator';
+} from '../common/decorators/paginate.decorator';
 
 @Controller({
   path: 'bookings',

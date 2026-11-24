@@ -26,13 +26,13 @@ import { AvailabilityQueryDto } from './dto/availability-query.dto';
 // Import Interfaces and Types
 
 // Import Others (Common etc)
-import { ResponseMessage } from '@common/decorators/response-message.decorator';
-import { Roles } from '@common/decorators/roles.decorator';
-import { Public } from '@common/decorators/public.decorator';
+import { ResponseMessage } from '../common/decorators/response-message.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import { Public } from '../common/decorators/public.decorator';
 import {
   Paginate,
   PaginationParams,
-} from '@common/decorators/paginate.decorator';
+} from '../common/decorators/paginate.decorator';
 
 @Controller({
   path: 'rooms',

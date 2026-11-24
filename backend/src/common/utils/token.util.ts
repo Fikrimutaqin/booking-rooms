@@ -9,7 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 
 // Import Interfaces and Types
 import { User } from '../../users/interfaces/user.interface';
-import { JwtPayload } from '@common/interfaces/jwt-payload.interface';
+import { JwtPayload } from '../interfaces/jwt-payload.interface';
 
 // Import Others (Common etc)
 import { hashPassword } from './hash.util';

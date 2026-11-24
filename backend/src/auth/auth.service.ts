@@ -18,11 +18,11 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 // Import Interfaces and Types
 import { UserSignToken } from './interfaces/auth.interface';
-import { JwtPayload } from '@common/interfaces/jwt-payload.interface';
+import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 // Import Others (Common etc)
-import { hashPassword, verifyPassword } from '@common/utils/hash.util';
-import token from '@common/utils/token.util';
+import { hashPassword, verifyPassword } from '../common/utils/hash.util';
+import token from '../common/utils/token.util';
 
 @Injectable()
 export class AuthService {
