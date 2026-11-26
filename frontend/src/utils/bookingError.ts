@@ -17,7 +17,35 @@ export function parseBookingError(rawError: string | null): ParsedBookingError {
 
   const lower = rawError.toLowerCase();
 
-  // 1. Conflict / Overlapping reservation
+  // 1. Weekend / Holiday constraint
+  if (
+    lower.includes('weekend') ||
+    lower.includes('sabtu') ||
+    lower.includes('minggu') ||
+    lower.includes('libur')
+  ) {
+    return {
+      title: 'Weekend Booking Unavailable',
+      description:
+        'Meeting room reservations are not available on weekends (Saturday and Sunday). All rooms are closed on non-working days.',
+      suggestion:
+        'Please choose an upcoming business weekday (Monday through Friday) on the calendar.',
+      iconType: 'hours',
+    };
+  }
+
+  // 2. Recurring booking conflict
+  if (lower.includes('recurring booking conflict') || lower.includes('booking berulang')) {
+    return {
+      title: 'Recurring Schedule Conflict',
+      description: rawError,
+      suggestion:
+        'One of the requested weekly slots is already taken. You can switch to another room, select a different time slot, or choose "Skip Conflicts" to book only the available weeks.',
+      iconType: 'conflict',
+    };
+  }
+
+  // 2. Conflict / Overlapping reservation
   if (
     lower.includes('already been booked') ||
     lower.includes('conflict') ||

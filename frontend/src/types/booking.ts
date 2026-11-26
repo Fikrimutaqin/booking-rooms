@@ -9,6 +9,7 @@ export interface CalendarDayItem {
   isCurrentMonth: boolean;
   isToday: boolean;
   isPast: boolean;
+  isWeekend: boolean;
   isSelected: boolean;
   hasBookings: boolean;
 }
@@ -23,6 +24,9 @@ export interface BookingCalendarProps {
   onSelectDate: (date: Date) => void;
   bookedDates?: string[];
   className?: string;
+  isMultiDate?: boolean;
+  endDate?: Date | null;
+  activeRangeField?: 'start' | 'end' | null;
 }
 
 /**
@@ -58,6 +62,35 @@ export interface SuccessBookingData {
   roomName: string;
   date: string;
   time: string;
+  isRecurring?: boolean;
+  recurringSummary?: string;
+  isMultiDate?: boolean;
+}
+
+/**
+ * Name Interface: RecurringConflictItem
+ * Description: Data contract representing an individual recurring booking week conflict.
+ * Reason: Identifies specific week index, date, time slot, and clashing booking reason.
+ **/
+export interface RecurringConflictItem {
+  week: number;
+  date: string;
+  startAt: string;
+  endAt: string;
+  clashTitle: string;
+}
+
+/**
+ * Name Interface: RecurringBookingResult
+ * Description: Response contract returned by backend when recurring reservations are processed.
+ * Reason: Contains aggregated metrics, successfully created booking rows, and skipped conflict records.
+ **/
+export interface RecurringBookingResult {
+  isRecurring: true;
+  totalRequested: number;
+  totalCreated: number;
+  bookings: BookingApiItem[];
+  conflicts: RecurringConflictItem[];
 }
 
 /**
@@ -72,3 +105,58 @@ export interface BookingSuccessDialogProps {
   onViewList: () => void;
   onBookAnother: () => void;
 }
+
+/**
+ * Name Interface: BookingApiItem
+ * Description: Data contract representing a single booking record from the backend.
+ * Reason: Defines the structure for individual booking details returned by the API.
+ */
+export interface BookingApiItem {
+  id: string;
+  roomId: string;
+  userId: string;
+  title: string;
+  startAt: string;
+  endAt: string;
+  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
+  room?: {
+    id: string;
+    name: string;
+    location: string;
+  };
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+}
+
+/**
+ * Name Interface: CreateBookingPayload
+ * Description: Data contract representing a single booking record from the backend.
+ * Reason: Defines the structure for individual booking details returned by the API.
+ */
+export interface CreateBookingPayload {
+  roomId: string;
+  title: string;
+  startAt: string;
+  endAt: string;
+  isMultiDate?: boolean;
+  endDate?: string;
+  isRecurring?: boolean;
+  recurrenceFrequency?: 'WEEKLY';
+  recurrenceWeeks?: number;
+  conflictStrategy?: 'ALL_OR_NOTHING' | 'SKIP_CONFLICTS';
+}
+
+/**
+ * Name Interface: BookingDetailPopupProps
+ * Description: Props contract for the BookingDetailPopup modal dialog component.
+ * Reason: Defines visibility state, change handler callback, and the target reservation entity to display.
+ **/
+export interface BookingDetailPopupProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  booking: BookingApiItem | null;
+}
+

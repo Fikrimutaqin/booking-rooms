@@ -6,6 +6,10 @@ import {
   formatSelectedDate,
   calculateDurationMinutes,
   formatDurationLabel,
+  isWeekend,
+  getNextAvailableWeekday,
+  WEEKDAYS,
+  setTargetWeekday,
 } from '@/utils/calendar';
 import type { SuccessBookingData } from '@/types/booking';
 
@@ -18,11 +22,9 @@ export function useAddBooking() {
   const { bookings, createBooking, isMutating } = useBookings();
   const { rooms, loading: loadingRooms } = useRooms();
 
-  // Selected calendar date
+  // Selected calendar date (defaults to next available weekday)
   const [selectedDate, setSelectedDate] = React.useState<Date>(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
+    return getNextAvailableWeekday(new Date());
   });
 
   // Form input states
@@ -30,6 +32,109 @@ export function useAddBooking() {
   const [roomId, setRoomId] = React.useState('');
   const [startTime, setStartTime] = React.useState('09:00');
   const [endTime, setEndTime] = React.useState('10:00');
+
+  // Multiple Date Range booking states (endDate is null when single date is selected)
+  const [endDate, setEndDate] = React.useState<Date | null>(null);
+  const [activeRangeField, setActiveRangeField] = React.useState<'start' | 'end' | null>(null);
+
+  // Dynamic multi-date check: true whenever an endDate distinct from selectedDate is chosen
+  const isMultiDate = React.useMemo(() => {
+    return Boolean(endDate && formatDateToYMD(endDate) !== formatDateToYMD(selectedDate));
+  }, [endDate, selectedDate]);
+
+  // Safe date selection handler with automatic multi-date range detection
+  const handleSelectDate = React.useCallback(
+    (date: Date) => {
+      if (isWeekend(date)) {
+        setErrorDialogState({
+          open: true,
+          error:
+            'Reservations cannot be made on weekends (Saturday and Sunday). All rooms are closed on non-working days.',
+        });
+        return;
+      }
+
+      // If user explicitly activated either the start or end date field
+      if (activeRangeField === 'start') {
+        setSelectedDate(date);
+        if (endDate && date > endDate) {
+          setEndDate(date);
+        }
+        setActiveRangeField('end');
+        return;
+      }
+
+      if (activeRangeField === 'end') {
+        if (date < selectedDate) {
+          setSelectedDate(date);
+          setActiveRangeField('end');
+        } else {
+          setEndDate(date);
+          setActiveRangeField(null);
+        }
+        return;
+      }
+
+      // Default calendar interaction:
+      // If currently in single-date mode:
+      if (!endDate || formatDateToYMD(endDate) === formatDateToYMD(selectedDate)) {
+        if (formatDateToYMD(date) === formatDateToYMD(selectedDate)) {
+          // Clicked same date
+          return;
+        }
+        if (date > selectedDate) {
+          // Clicked a subsequent date -> creates multi-date range!
+          setEndDate(date);
+          setActiveRangeField(null);
+        } else {
+          // Clicked an earlier date -> moves selectedDate to the new date
+          setSelectedDate(date);
+          setEndDate(null);
+          setActiveRangeField(null);
+        }
+        return;
+      }
+
+      // If already in multi-date mode and clicked any date on calendar:
+      // Restart selection from this new date as single date (waiting for second date)
+      setSelectedDate(date);
+      setEndDate(null);
+      setActiveRangeField(null);
+    },
+    [activeRangeField, selectedDate, endDate]
+  );
+
+  // Switch back to single date mode
+  const handleResetToSingleDate = React.useCallback(() => {
+    setEndDate(null);
+    setActiveRangeField(null);
+  }, []);
+
+  // Recurring booking states
+  const [isRecurring, setIsRecurring] = React.useState(false);
+  const [recurrenceWeeks, setRecurrenceWeeks] = React.useState(4);
+  const [conflictStrategy, setConflictStrategy] = React.useState<'ALL_OR_NOTHING' | 'SKIP_CONFLICTS'>(
+    'ALL_OR_NOTHING'
+  );
+
+  // Toggle recurring and automatically shift away from weekends if currently on one
+  const handleToggleRecurring = React.useCallback((enable: boolean) => {
+    setIsRecurring(enable);
+    if (enable) {
+      setEndDate(null); // Mutually exclusive with date range mode
+      setSelectedDate((prev) => {
+        if (isWeekend(prev)) {
+          return getNextAvailableWeekday(prev);
+        }
+        return prev;
+      });
+    }
+  }, []);
+
+  // Handler for directly switching the target recurring weekday (Monday to Friday only)
+  const handleSelectRecurringDay = React.useCallback((dayIndex: number) => {
+    setSelectedDate((prev) => setTargetWeekday(prev, dayIndex));
+  }, []);
 
   // Popup Dialog States
   const [errorDialogState, setErrorDialogState] = React.useState<{
@@ -79,6 +184,67 @@ export function useAddBooking() {
     return formatSelectedDate(selectedDate);
   }, [selectedDate]);
 
+  // End date formatted strings for multi-date range
+  const endDateStr = React.useMemo(() => {
+    return endDate ? formatDateToYMD(endDate) : '';
+  }, [endDate]);
+
+  const endDateFormatted = React.useMemo(() => {
+    return endDate ? formatSelectedDate(endDate) : '';
+  }, [endDate]);
+
+  // Compute preview and metrics for multiple date range
+  const multiDatePreview = React.useMemo(() => {
+    if (!isMultiDate || !endDate) return [];
+    const list = [];
+    const curr = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+    const end = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+
+    while (curr.getTime() <= end.getTime()) {
+      const dateStr = formatDateToYMD(curr);
+      const dateFormatted = formatSelectedDate(curr);
+      const dayName = curr.toLocaleDateString('en-US', { weekday: 'long' });
+      const weekend = isWeekend(curr);
+
+      const hasClash = bookings.some((b) => {
+        if (!b.startAt || !b.endAt || b.roomId !== roomId || b.status === 'CANCELLED') return false;
+        const bStart = new Date(b.startAt);
+        if (formatDateToYMD(bStart) !== dateStr) return false;
+
+        const occStartTime = new Date(`${dateStr}T${startTime}:00+07:00`).getTime();
+        const occEndTime = new Date(`${dateStr}T${endTime}:00+07:00`).getTime();
+        const bStartTime = bStart.getTime();
+        const bEndTime = new Date(b.endAt).getTime();
+        return occStartTime < bEndTime && occEndTime > bStartTime;
+      });
+
+      list.push({
+        date: new Date(curr),
+        dateStr,
+        dateFormatted,
+        dayName,
+        isWeekend: weekend,
+        hasConflict: weekend || hasClash,
+        conflictReason: weekend
+          ? 'Weekend / Holiday (Excluded)'
+          : hasClash
+            ? 'Room already booked'
+            : undefined,
+      });
+
+      curr.setDate(curr.getDate() + 1);
+    }
+    return list;
+  }, [isMultiDate, selectedDate, endDate, bookings, roomId, startTime, endTime]);
+
+  const workingDaysCount = React.useMemo(() => {
+    return multiDatePreview.filter((p) => !p.isWeekend).length;
+  }, [multiDatePreview]);
+
+  const weekendDaysCount = React.useMemo(() => {
+    return multiDatePreview.filter((p) => p.isWeekend).length;
+  }, [multiDatePreview]);
+
   // Active bookings on the selected date
   const dayBookings = React.useMemo(() => {
     return bookings.filter((b) => {
@@ -96,6 +262,54 @@ export function useAddBooking() {
   const durationLabel = React.useMemo(() => {
     return formatDurationLabel(durationMinutes);
   }, [durationMinutes]);
+
+  // Compute preview for recurring weekly occurrences
+  const recurringPreview = React.useMemo(() => {
+    if (!isRecurring) return [];
+    const previewList = [];
+    const oneWeekMs = 7 * 24 * 60 * 60 * 1000;
+    const baseTime = selectedDate.getTime();
+
+    for (let i = 0; i < recurrenceWeeks; i++) {
+      const occurrenceDate = new Date(baseTime + i * oneWeekMs);
+      const dateStr = formatDateToYMD(occurrenceDate);
+      const dateFormatted = formatSelectedDate(occurrenceDate);
+      const dayName = occurrenceDate.toLocaleDateString('en-US', { weekday: 'long' });
+      const occurrenceIsWeekend = isWeekend(occurrenceDate);
+
+      // Check for client-side clash on that date & room
+      const hasClash = bookings.some((b) => {
+        if (!b.startAt || !b.endAt || b.roomId !== roomId || b.status === 'CANCELLED') return false;
+        const bStart = new Date(b.startAt);
+        if (formatDateToYMD(bStart) !== dateStr) return false;
+
+        const occStartTime = new Date(`${dateStr}T${startTime}:00+07:00`).getTime();
+        const occEndTime = new Date(`${dateStr}T${endTime}:00+07:00`).getTime();
+        const bStartTime = bStart.getTime();
+        const bEndTime = new Date(b.endAt).getTime();
+        return occStartTime < bEndTime && occEndTime > bStartTime;
+      });
+
+      const hasConflict = occurrenceIsWeekend || hasClash;
+      const conflictReason = occurrenceIsWeekend
+        ? 'Weekend / Holiday (Excluded)'
+        : hasClash
+          ? 'Room already booked'
+          : undefined;
+
+      previewList.push({
+        week: i + 1,
+        dateStr,
+        dateFormatted,
+        dayName,
+        isWeekend: occurrenceIsWeekend,
+        hasConflict,
+        conflictReason,
+      });
+    }
+
+    return previewList;
+  }, [isRecurring, recurrenceWeeks, selectedDate, bookings, roomId, startTime, endTime]);
 
   // Close Dialog Handlers
   const closeErrorDialog = React.useCallback(() => {
@@ -117,6 +331,34 @@ export function useAddBooking() {
   // Form Submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // 0. Weekend validation (Saturday and Sunday closed)
+    if (!isMultiDate && isWeekend(selectedDate)) {
+      setErrorDialogState({
+        open: true,
+        error: 'Reservations cannot be made on weekends (Saturday and Sunday). Meeting rooms are closed on non-working days.',
+      });
+      return;
+    }
+
+    // 0.1 Multiple date range validation
+    if (isMultiDate && endDate) {
+      if (endDate < selectedDate) {
+        setErrorDialogState({
+          open: true,
+          error: 'End Date must be scheduled on or after the Start Date.',
+        });
+        return;
+      }
+
+      if (workingDaysCount === 0) {
+        setErrorDialogState({
+          open: true,
+          error: 'The selected date range contains only weekends. Please include at least one weekday (Monday - Friday).',
+        });
+        return;
+      }
+    }
 
     // 1. Title validation
     if (!title.trim()) {
@@ -170,7 +412,6 @@ export function useAddBooking() {
 
     // 6. Past check
     const startDateTime = new Date(`${selectedDateStr}T${startTime}:00+07:00`);
-    const endDateTime = new Date(`${selectedDateStr}T${endTime}:00+07:00`);
 
     if (startDateTime.getTime() < Date.now()) {
       setErrorDialogState({
@@ -181,22 +422,56 @@ export function useAddBooking() {
     }
 
     try {
-      await createBooking({
+      const endDateTime = new Date(`${selectedDateStr}T${endTime}:00+07:00`);
+      const rangeEndDateTime = endDateStr
+        ? new Date(`${endDateStr}T${endTime}:00+07:00`)
+        : null;
+
+      const result = await createBooking({
         roomId,
         title: title.trim(),
         startAt: startDateTime.toISOString(),
         endAt: endDateTime.toISOString(),
+        ...(isMultiDate && rangeEndDateTime && {
+          isMultiDate: true,
+          endDate: rangeEndDateTime.toISOString(),
+        }),
+        ...(!isMultiDate && isRecurring && {
+          isRecurring: true,
+          recurrenceFrequency: 'WEEKLY',
+          recurrenceWeeks,
+          conflictStrategy,
+        }),
       });
 
       const selectedRoom = rooms.find((r) => r.id === roomId);
+      const isRecResult = result && typeof result === 'object' && 'isRecurring' in result;
+      const createdCount = isRecResult
+        ? result.totalCreated
+        : isMultiDate
+          ? workingDaysCount
+          : recurrenceWeeks;
+      const skippedCount = isRecResult ? result.conflicts.length : 0;
 
       setSuccessDialogState({
         open: true,
         data: {
           title: title.trim(),
           roomName: selectedRoom ? selectedRoom.name : 'Meeting Room',
-          date: selectedDateFormatted,
+          date: isMultiDate
+            ? `${selectedDateFormatted} - ${endDateFormatted}`
+            : isRecurring
+              ? `${selectedDateFormatted} (${recurrenceWeeks} weeks recurring)`
+              : selectedDateFormatted,
           time: `${startTime} - ${endTime} WIB`,
+          isMultiDate,
+          isRecurring: !isMultiDate && isRecurring,
+          recurringSummary: isMultiDate
+            ? `Multi-date reservation confirmed: ${workingDaysCount} working days scheduled (${weekendDaysCount} weekend days excluded).`
+            : isRecurring
+              ? `Weekly recurring reservation confirmed: ${createdCount} of ${recurrenceWeeks} sessions scheduled${skippedCount > 0 ? ` (${skippedCount} conflicts skipped)` : ''
+              }.`
+              : undefined,
         },
       });
     } catch (err: unknown) {
@@ -211,7 +486,7 @@ export function useAddBooking() {
 
   return {
     selectedDate,
-    setSelectedDate,
+    setSelectedDate: handleSelectDate,
     title,
     setTitle,
     roomId,
@@ -223,12 +498,33 @@ export function useAddBooking() {
     bookedDates,
     selectedDateStr,
     selectedDateFormatted,
+    isMultiDate,
+    endDate,
+    setEndDate,
+    endDateStr,
+    endDateFormatted,
+    activeRangeField,
+    setActiveRangeField,
+    handleResetToSingleDate,
+    multiDatePreview,
+    workingDaysCount,
+    weekendDaysCount,
     dayBookings,
     durationMinutes,
     durationLabel,
     rooms,
     loadingRooms,
     isMutating,
+    isRecurring,
+    setIsRecurring: handleToggleRecurring,
+    recurrenceWeeks,
+    setRecurrenceWeeks,
+    conflictStrategy,
+    setConflictStrategy,
+    recurringPreview,
+    handleSelectRecurringDay,
+    currentDayIndex: selectedDate.getDay() === 0 ? 7 : selectedDate.getDay(),
+    WEEKDAYS,
     errorDialogState,
     setErrorDialogState,
     closeErrorDialog,

@@ -2,6 +2,64 @@ import type { CalendarDayItem } from '@/types/booking';
 
 export const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+export interface WeekdayOption {
+  dayIndex: number;
+  shortName: string;
+  fullName: string;
+}
+
+export const WEEKDAYS: WeekdayOption[] = [
+  { dayIndex: 1, shortName: 'Mon', fullName: 'Monday' },
+  { dayIndex: 2, shortName: 'Tue', fullName: 'Tuesday' },
+  { dayIndex: 3, shortName: 'Wed', fullName: 'Wednesday' },
+  { dayIndex: 4, shortName: 'Thu', fullName: 'Thursday' },
+  { dayIndex: 5, shortName: 'Fri', fullName: 'Friday' },
+];
+
+/**
+ * Name Function: setTargetWeekday
+ * Description: Adjusts a base date to a specified target weekday index (1=Mon ... 5=Fri), ensuring it falls in the upcoming schedule.
+ * Reason: Powers the recurring day-of-week switcher, ensuring only weekdays can be chosen and weekends are never scheduled.
+ **/
+export function setTargetWeekday(date: Date, targetDayIndex: number): Date {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const currentDay = d.getDay();
+  const currentMonBased = currentDay === 0 ? 7 : currentDay;
+  const diff = targetDayIndex - currentMonBased;
+  d.setDate(d.getDate() + diff);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (d.getTime() < today.getTime()) {
+    d.setDate(d.getDate() + 7);
+  }
+  return d;
+}
+
+/**
+ * Name Function: isWeekend
+ * Description: Checks whether a given Date falls on Saturday or Sunday.
+ * Reason: Enforces company business policy that office meeting rooms are closed on weekends.
+ **/
+export function isWeekend(date: Date): boolean {
+  const day = date.getDay();
+  return day === 0 || day === 6; // 0 = Sunday, 6 = Saturday
+}
+
+/**
+ * Name Function: getNextAvailableWeekday
+ * Description: Finds the closest upcoming weekday (Monday through Friday) starting from a target date.
+ * Reason: Initializes default selected dates to valid working days, avoiding weekend selections.
+ **/
+export function getNextAvailableWeekday(date: Date = new Date()): Date {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  while (isWeekend(d)) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d;
+}
+
 /**
  * Name Function: formatDateToYMD
  * Description: Converts a Date instance into a normalized 'YYYY-MM-DD' calendar date string.
@@ -92,6 +150,7 @@ export function generateCalendarDays(
       isCurrentMonth: false,
       isToday: d.getTime() === today.getTime(),
       isPast: d.getTime() < today.getTime(),
+      isWeekend: isWeekend(d),
       isSelected: false,
       hasBookings: bookedDates.includes(dateStr),
     });
@@ -113,6 +172,7 @@ export function generateCalendarDays(
       isCurrentMonth: true,
       isToday: d.getTime() === today.getTime(),
       isPast: d.getTime() < today.getTime(),
+      isWeekend: isWeekend(d),
       isSelected,
       hasBookings: bookedDates.includes(dateStr),
     });
@@ -130,6 +190,7 @@ export function generateCalendarDays(
       isCurrentMonth: false,
       isToday: d.getTime() === today.getTime(),
       isPast: d.getTime() < today.getTime(),
+      isWeekend: isWeekend(d),
       isSelected: false,
       hasBookings: bookedDates.includes(dateStr),
     });

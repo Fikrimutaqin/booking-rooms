@@ -79,6 +79,13 @@ export function BookingSuccessDialog({
               </div>
             </div>
           </div>
+
+          {(bookingData.isRecurring || bookingData.isMultiDate) && bookingData.recurringSummary && (
+            <div className="rounded-md bg-primary/10 border border-primary/20 p-2.5 text-xs text-primary font-medium flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-primary" />
+              <span>{bookingData.recurringSummary}</span>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">

@@ -51,7 +51,7 @@ export function Sidebar({
         className={cn(
           'fixed inset-y-0 left-0 z-40 border-r border-border bg-card flex flex-col justify-between transition-all duration-300 ease-in-out md:static md:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
-          isCollapsed ? 'w-64 md:w-16' : 'w-64',
+          isCollapsed ? 'w-64 md:w-16' : 'w-58',
           className
         )}
         aria-label="Application Sidebar"

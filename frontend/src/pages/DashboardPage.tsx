@@ -18,6 +18,7 @@ import {
 import { useDashboardState } from '@/hooks/useDashboardState';
 import { ROUTES } from '@/constants/routes';
 import type { DashboardPageProps } from '@/types/dashboard';
+import { HistoryView } from '@/components/dashboard/HistoryView';
 
 export type { DashboardPageProps };
 
@@ -43,7 +44,7 @@ export function DashboardPage(props: DashboardPageProps) {
   } = useDashboardState(props);
 
   const handleAction = () => {
-    if (activeTab === 'bookings') {
+    if (activeTab === 'bookings' || activeTab === 'history') {
       navigate(ROUTES.ADD_BOOKING);
     } else {
       openDialog();
@@ -71,6 +72,7 @@ export function DashboardPage(props: DashboardPageProps) {
       {activeTab === 'bookings' && <BookingsView />}
       {activeTab === 'rooms' && <RoomsView />}
       {activeTab === 'users' && <UsersView />}
+      {activeTab === 'history' && <HistoryView />}
 
       {/* Shadcn UI Action Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Clock, AlertCircle, MoreHorizontal, Loader2, Trash2, Plus } from 'lucide-react';
+import { CalendarDays, Clock, MoreHorizontal, Loader2, Plus } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,10 @@ import { useBookings } from '@/hooks/useBookings';
 import { getBookingStatusVariant } from '@/utils/status';
 import { formatSchedule } from '@/utils/date';
 import { ROUTES } from '@/constants/routes';
+import React from 'react';
+import BookingDetailPopup from '../booking/BookingDetailPopUp';
+import { BookingErrorDialog } from '../booking/BookingErrorDialog';
+import { BookingApiItem } from '@/types/booking';
 
 /**
  * Name Function: BookingsView
@@ -42,7 +46,20 @@ export function BookingsView() {
 
   const totalBookings = bookings.length;
   const activeBookings = bookings.filter((b) => b.status === 'CONFIRMED').length;
-  const pendingBookings = bookings.filter((b) => b.status === 'PENDING').length;
+  const totalCancelledBookings = bookings.filter((b) => b.status === 'CANCELLED').length;
+
+  // State to hold the currently selected booking for detail popup inspection
+  const [selectedBooking, setSelectedBooking] = React.useState<BookingApiItem | null>(null);
+
+  // State to control visibility of the error notification popup dialog
+  const [showErrorDialog, setShowErrorDialog] = React.useState(false);
+
+  // Automatically display the error popup dialog when an error occurs
+  React.useEffect(() => {
+    if (error) {
+      setShowErrorDialog(true);
+    }
+  }, [error]);
 
   return (
     <div className="space-y-6">
@@ -63,10 +80,10 @@ export function BookingsView() {
           className="border-border bg-card"
         />
         <StatCard
-          title="Pending Approval"
-          value={loading ? '...' : pendingBookings}
-          description="Awaiting admin confirmation"
-          icon={AlertCircle}
+          title="Canceled"
+          value={loading ? '...' : totalCancelledBookings}
+          description="Canceled bookings"
+          icon={Clock}
           className="border-border bg-card"
         />
       </section>
@@ -100,12 +117,6 @@ export function BookingsView() {
                       <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                       <span>Loading bookings data...</span>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ) : error ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center text-destructive">
-                    {error}
                   </TableCell>
                 </TableRow>
               ) : bookings.length === 0 ? (
@@ -168,9 +179,15 @@ export function BookingsView() {
                               onClick={() => cancelBooking(booking.id)}
                               className="gap-2 text-destructive focus:text-destructive cursor-pointer"
                             >
-                              <Trash2 className="h-4 w-4" /> Cancel Booking
+                              Cancel Booking
                             </DropdownMenuItem>
                           )}
+                          <DropdownMenuItem
+                            onClick={() => setSelectedBooking(booking)}
+                            className="gap-2 cursor-pointer"
+                          >
+                            Booking Details
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -181,6 +198,18 @@ export function BookingsView() {
           </Table>
         </CardContent>
       </Card>
+      <BookingErrorDialog
+        open={showErrorDialog}
+        onOpenChange={setShowErrorDialog}
+        rawError={error}
+      />
+      <BookingDetailPopup
+        booking={selectedBooking}
+        open={Boolean(selectedBooking)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedBooking(null);
+        }}
+      />
     </div>
   );
 }
