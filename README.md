@@ -74,6 +74,8 @@ DIRECT_URL="postgresql://username:password@ep-sample-12345.region.aws.neon.tech/
 # Kunci JWT untuk Autentikasi:
 JWT_SECRET="super-secret-jwt-key-change-this-in-production"
 JWT_EXPIRES_IN="1d"
+JWT_REFRESH_SECRET="super-secret-refresh-jwt-key-change-this-in-production"
+JWT_REFRESH_EXPIRES_IN="7d"
 ```
 
 #### C. Migrasi Database & Generate Client
