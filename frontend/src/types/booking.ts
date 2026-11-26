@@ -118,7 +118,7 @@ export interface BookingApiItem {
   title: string;
   startAt: string;
   endAt: string;
-  status: 'CONFIRMED' | 'BOOKED' | 'CANCELLED';
+  status: 'BOOKED' | 'CANCELLED';
   createdAt?: string;
   updatedAt?: string;
   room?: {

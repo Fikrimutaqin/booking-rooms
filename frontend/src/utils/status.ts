@@ -2,15 +2,14 @@ export type StatusBadgeVariant = 'default' | 'secondary' | 'destructive' | 'outl
 
 /**
  * Name Function: getBookingStatusVariant
- * Description: Maps booking status ('CONFIRMED', 'BOOKED', 'CANCELLED') to corresponding Shadcn Badge component variant styling ('default', 'secondary', 'outline').
+ * Description: Maps booking status ('BOOKED', 'CANCELLED') to corresponding Shadcn Badge component variant styling ('default', 'outline').
  * Reason: Centralizes badge color mapping rules for booking statuses across tables and metric cards.
  **/
 export function getBookingStatusVariant(status?: string): StatusBadgeVariant {
   switch (status) {
+    case 'BOOKED':
     case 'CONFIRMED':
       return 'default';
-    case 'BOOKED':
-      return 'secondary';
     case 'CANCELLED':
       return 'outline';
     default:

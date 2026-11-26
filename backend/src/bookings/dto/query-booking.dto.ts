@@ -3,7 +3,7 @@ import { BookingStatus } from '@prisma/client';
 
 export class QueryBookingDto {
   @IsOptional()
-  @IsEnum(BookingStatus, { message: 'Status must be CONFIRMED or CANCELLED' })
+  @IsEnum(BookingStatus, { message: 'Status must be BOOKED or CANCELLED' })
   status?: BookingStatus;
 
   @IsOptional()

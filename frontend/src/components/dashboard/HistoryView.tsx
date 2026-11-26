@@ -107,10 +107,10 @@ export function HistoryView() {
     // Dynamic Statistics computed from personal booking records
     const totalBookings = bookings.length;
     const activeBookings = bookings.filter(
-        (b) => b.status === 'CONFIRMED' && new Date(b.endAt).getTime() >= nowMs
+        (b) => b.status === 'BOOKED' && new Date(b.endAt).getTime() >= nowMs
     ).length;
     const completedBookings = bookings.filter(
-        (b) => b.status === 'CONFIRMED' && new Date(b.endAt).getTime() < nowMs
+        (b) => b.status === 'BOOKED' && new Date(b.endAt).getTime() < nowMs
     ).length;
     const cancelledBookings = bookings.filter((b) => b.status === 'CANCELLED').length;
 

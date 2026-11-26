@@ -15,7 +15,6 @@ enum Role {
 
 enum BookingStatus {
   BOOKED
-  CONFIRMED
   CANCELLED
 }
 
@@ -55,7 +54,7 @@ model Booking {
   title     String
   startAt   DateTime      @map("start_at") @db.Timestamptz(3)
   endAt     DateTime      @map("end_at") @db.Timestamptz(3)
-  status    BookingStatus @default(CONFIRMED)
+  status    BookingStatus @default(BOOKED)
   room      Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
   user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime      @default(now()) @map("created_at")

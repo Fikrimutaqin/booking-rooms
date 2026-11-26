@@ -17,7 +17,7 @@ export interface BookingItem {
   room: string;
   user: string;
   date: string;
-  status: 'CONFIRMED' | 'BOOKED' | 'CANCELLED';
+  status: 'BOOKED' | 'CANCELLED';
 }
 
 /**

@@ -117,7 +117,7 @@ export function BookingsView() {
   } = usePagination(filteredBookings, 10);
 
   const totalBookings = bookings.length;
-  const activeBookings = bookings.filter((b) => b.status === 'CONFIRMED').length;
+  const activeBookings = bookings.filter((b) => b.status === 'BOOKED').length;
   const totalCancelledBookings = bookings.filter((b) => b.status === 'CANCELLED').length;
 
   // State to control visibility of the error notification popup dialog
