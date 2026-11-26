@@ -422,36 +422,73 @@ export function useAddBooking() {
     }
 
     try {
-      const endDateTime = new Date(`${selectedDateStr}T${endTime}:00+07:00`);
-      const rangeEndDateTime = endDateStr
-        ? new Date(`${endDateStr}T${endTime}:00+07:00`)
-        : null;
+      let createdCount = 1;
+      let skippedCount = 0;
 
-      const result = await createBooking({
-        roomId,
-        title: title.trim(),
-        startAt: startDateTime.toISOString(),
-        endAt: endDateTime.toISOString(),
-        ...(isMultiDate && rangeEndDateTime && {
-          isMultiDate: true,
-          endDate: rangeEndDateTime.toISOString(),
-        }),
-        ...(!isMultiDate && isRecurring && {
-          isRecurring: true,
-          recurrenceFrequency: 'WEEKLY',
-          recurrenceWeeks,
-          conflictStrategy,
-        }),
-      });
+      if (isMultiDate) {
+        const targetDays = multiDatePreview.filter((p) => !p.isWeekend);
+        if (targetDays.length === 0) {
+          setErrorDialogState({
+            open: true,
+            error:
+              'The selected date range contains only weekends. All rooms are closed on weekends.',
+          });
+          return;
+        }
+
+        const clashingDay = targetDays.find((p) => p.hasConflict);
+        if (clashingDay) {
+          setErrorDialogState({
+            open: true,
+            error: `Schedule conflict on ${clashingDay.dateFormatted}: ${
+              clashingDay.conflictReason || 'Room already booked'
+            }.`,
+          });
+          return;
+        }
+
+        // Create standard booking for each working day in the range without non-whitelisted properties
+        await Promise.all(
+          targetDays.map((day) => {
+            const dayStartAt = new Date(
+              `${day.dateStr}T${startTime}:00+07:00`
+            );
+            const dayEndAt = new Date(
+              `${day.dateStr}T${endTime}:00+07:00`
+            );
+
+            return createBooking({
+              roomId,
+              title: title.trim(),
+              startAt: dayStartAt.toISOString(),
+              endAt: dayEndAt.toISOString(),
+            });
+          })
+        );
+        createdCount = targetDays.length;
+      } else {
+        const endDateTime = new Date(`${selectedDateStr}T${endTime}:00+07:00`);
+
+        const result = await createBooking({
+          roomId,
+          title: title.trim(),
+          startAt: startDateTime.toISOString(),
+          endAt: endDateTime.toISOString(),
+          ...(isRecurring && {
+            isRecurring: true,
+            recurrenceFrequency: 'WEEKLY',
+            recurrenceWeeks,
+            conflictStrategy,
+          }),
+        });
+
+        const isRecResult =
+          result && typeof result === 'object' && 'isRecurring' in result;
+        createdCount = isRecResult ? result.totalCreated : recurrenceWeeks;
+        skippedCount = isRecResult ? result.conflicts.length : 0;
+      }
 
       const selectedRoom = rooms.find((r) => r.id === roomId);
-      const isRecResult = result && typeof result === 'object' && 'isRecurring' in result;
-      const createdCount = isRecResult
-        ? result.totalCreated
-        : isMultiDate
-          ? workingDaysCount
-          : recurrenceWeeks;
-      const skippedCount = isRecResult ? result.conflicts.length : 0;
 
       setSuccessDialogState({
         open: true,
@@ -469,8 +506,9 @@ export function useAddBooking() {
           recurringSummary: isMultiDate
             ? `Multi-date reservation confirmed: ${workingDaysCount} working days scheduled (${weekendDaysCount} weekend days excluded).`
             : isRecurring
-              ? `Weekly recurring reservation confirmed: ${createdCount} of ${recurrenceWeeks} sessions scheduled${skippedCount > 0 ? ` (${skippedCount} conflicts skipped)` : ''
-              }.`
+              ? `Weekly recurring reservation confirmed: ${createdCount} of ${recurrenceWeeks} sessions scheduled${
+                  skippedCount > 0 ? ` (${skippedCount} conflicts skipped)` : ''
+                }.`
               : undefined,
         },
       });

@@ -50,3 +50,49 @@ export function formatDate(dateString?: string): string {
     return dateString;
   }
 }
+
+/**
+ * Name Function: formatDateTime
+ * Description: Formats an ISO date string into readable date and time (e.g., 'Nov 26, 2026, 14:30').
+ * Reason: Used in expanded detail views for precise creation and update timestamps.
+ **/
+export function formatDateTime(dateString?: string): string {
+  if (!dateString) return '-';
+  try {
+    const d = new Date(dateString);
+    const dateStr = d.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+    const timeStr = d.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+    return `${dateStr}, ${timeStr}`;
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Name Function: formatDuration
+ * Description: Calculates and formats duration between startAt and endAt into hours and minutes (e.g. '1 hr 30 mins').
+ * Reason: Displays human-friendly duration indicators in booking inspection panels.
+ **/
+export function formatDuration(startAt?: string, endAt?: string): string {
+  if (!startAt || !endAt) return '-';
+  try {
+    const diffMs = new Date(endAt).getTime() - new Date(startAt).getTime();
+    if (diffMs <= 0) return '-';
+    const totalMinutes = Math.round(diffMs / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0 && minutes > 0) return `${hours} hr ${minutes} mins`;
+    if (hours > 0) return `${hours} hr${hours > 1 ? 's' : ''}`;
+    return `${minutes} mins`;
+  } catch {
+    return '-';
+  }
+}

@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Link } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 import { useAuth } from '@/hooks';
 import { loginSchema, type LoginFormValues } from '@/schemas/auth.schema';
+import { ROUTES } from '@/constants/routes';
 import type { LoginFormProps } from '@/types/auth';
 
 /**
@@ -155,7 +157,13 @@ export function LoginForm({ onLogin }: LoginFormProps) {
 
             {/* Footer note */}
             <div className="text-center text-sm text-muted-foreground pt-1">
-              Don&apos;t have an account? Request to Admin
+              Don&apos;t have an account?{' '}
+              <Link
+                to={ROUTES.REGISTER}
+                className="font-medium text-foreground underline underline-offset-4 hover:text-primary transition-colors"
+              >
+                Register
+              </Link>
             </div>
           </form>
         </Form>

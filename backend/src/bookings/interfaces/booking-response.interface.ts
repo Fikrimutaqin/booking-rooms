@@ -4,6 +4,7 @@ export interface BookingRoomSummary {
   id: string;
   name: string;
   location?: string | null;
+  capacity?: number;
 }
 
 export interface BookingUserSummary {

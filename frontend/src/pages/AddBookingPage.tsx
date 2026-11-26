@@ -434,7 +434,7 @@ export function AddBookingPage() {
                         >
                           {rooms.map((r) => (
                             <option key={r.id} value={r.id} disabled={!r.isAvailable}>
-                              {r.name} ({r.capacity} pax) - {r.location} {!r.isAvailable ? '[Maintenance]' : ''}
+                              {r.name} ({r.capacity} People) - {r.location} {!r.isAvailable ? '[Maintenance]' : ''}
                             </option>
                           ))}
                         </select>

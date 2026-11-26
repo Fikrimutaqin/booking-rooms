@@ -49,7 +49,7 @@ export function DashboardLayout({
           variant="ghost"
           size="icon"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? 'Tutup navigasi menu' : 'Buka navigasi menu'}
+          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>

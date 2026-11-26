@@ -2,7 +2,7 @@
 CREATE TYPE "Role" AS ENUM ('EMPLOYEE', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED');
+CREATE TYPE "BookingStatus" AS ENUM ('BOOKED', 'CONFIRMED', 'CANCELLED');
 
 -- CreateTable
 CREATE TABLE "users" (

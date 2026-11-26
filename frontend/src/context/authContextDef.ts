@@ -1,11 +1,12 @@
 import * as React from 'react';
-import type { AuthUser, LoginResponse, RefreshTokenResponse } from '@/types/auth';
+import type { AuthUser, LoginResponse, RefreshTokenResponse, RegisterPayload, RegisterResponse } from '@/types/auth';
 
 export interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoadingSession: boolean;
   login: (email: string, password: string) => Promise<LoginResponse>;
+  register: (payload: RegisterPayload) => Promise<RegisterResponse>;
   logout: () => void;
   refresh: () => Promise<RefreshTokenResponse | null>;
 }

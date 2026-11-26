@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { SIDEBAR_NAV_ITEMS } from '@/constants/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import type { SidebarProps } from '@/types/sidebar';
 
 export type { SidebarProps };
@@ -35,6 +36,13 @@ export function Sidebar({
   onCloseMobile,
   className,
 }: SidebarProps) {
+  const { user } = useAuth();
+
+  const visibleNavItems = SIDEBAR_NAV_ITEMS.filter((item) => {
+    if (!item.roles) return true;
+    return user?.role ? item.roles.includes(user.role) : false;
+  });
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -109,7 +117,7 @@ export function Sidebar({
               <SidebarGroup>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {SIDEBAR_NAV_ITEMS.map((item) => {
+                    {visibleNavItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
 

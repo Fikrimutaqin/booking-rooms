@@ -118,11 +118,15 @@ export interface BookingApiItem {
   title: string;
   startAt: string;
   endAt: string;
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
+  status: 'CONFIRMED' | 'BOOKED' | 'CANCELLED';
+  createdAt?: string;
+  updatedAt?: string;
   room?: {
     id: string;
     name: string;
     location: string;
+    capacity?: number;
+    facilities?: string[] | string;
   };
   user?: {
     id: string;
@@ -141,8 +145,6 @@ export interface CreateBookingPayload {
   title: string;
   startAt: string;
   endAt: string;
-  isMultiDate?: boolean;
-  endDate?: string;
   isRecurring?: boolean;
   recurrenceFrequency?: 'WEEKLY';
   recurrenceWeeks?: number;

@@ -156,7 +156,7 @@ export class BookingsService {
                 endAt: occ.endAt,
               },
               include: {
-                room: { select: { id: true, name: true, location: true } },
+                room: { select: { id: true, name: true, location: true, capacity: true } },
               },
             }),
           ),
@@ -211,7 +211,7 @@ export class BookingsService {
             startAt: dto.startAt,
             endAt: dto.endAt,
           },
-          include: { room: { select: { id: true, name: true, location: true } } },
+          include: { room: { select: { id: true, name: true, location: true, capacity: true } } },
         });
       } catch (error) {
         if (isOverlapError(error)) {
@@ -324,7 +324,7 @@ export class BookingsService {
               endAt: occ.endAt,
             },
             include: {
-              room: { select: { id: true, name: true, location: true } },
+              room: { select: { id: true, name: true, location: true, capacity: true } },
             },
           }),
         ),
@@ -370,7 +370,7 @@ export class BookingsService {
     const [data, total] = await Promise.all([
       this.prisma.booking.findMany({
         where,
-        include: { room: { select: { id: true, name: true, location: true } } },
+        include: { room: { select: { id: true, name: true, location: true, capacity: true } } },
         orderBy: { startAt: 'desc' },
         skip: pagination.skip,
         take: pagination.limit || 20,
@@ -409,7 +409,7 @@ export class BookingsService {
       this.prisma.booking.findMany({
         where,
         include: {
-          room: { select: { id: true, name: true, location: true } },
+          room: { select: { id: true, name: true, location: true, capacity: true } },
           user: { select: { id: true, name: true, email: true } },
         },
         orderBy: { startAt: 'desc' },
@@ -439,7 +439,7 @@ export class BookingsService {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
       include: {
-        room: { select: { id: true, name: true, location: true } },
+        room: { select: { id: true, name: true, location: true, capacity: true } },
         user: { select: { id: true, name: true, email: true } },
       },
     });
@@ -537,7 +537,7 @@ export class BookingsService {
           ...(dto.endAt && { endAt: dto.endAt }),
           ...(dto.status && { status: dto.status }),
         },
-        include: { room: { select: { id: true, name: true, location: true } } },
+        include: { room: { select: { id: true, name: true, location: true, capacity: true } } },
       });
     } catch (error) {
       if (isOverlapError(error)) {

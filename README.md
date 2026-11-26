@@ -123,7 +123,7 @@ booking-rooms/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── ui/                # Komponen Primitif shadcn/ui (Black & White Theme)
-│   │   │   │   ├── badge.tsx      # Status Badge (CONFIRMED, PENDING, Available)
+│   │   │   │   ├── badge.tsx      # Status Badge (CONFIRMED, BOOKED, Available)
 │   │   │   │   ├── button.tsx     # Variant Button (default, outline, ghost, destructive)
 │   │   │   │   ├── card.tsx       # Card, CardHeader, CardTitle, CardContent
 │   │   │   │   ├── input.tsx      # Accessible Input field
@@ -293,7 +293,7 @@ Buka browser di: **`http://localhost:5173`**.
 2. **Halaman Dashboard (`/dashboard`)**:
    - **Collapsible Sidebar**: Sidebar di sebelah kiri yang dapat diciutkan (*collapse*) ke mode mini icon-bar (`w-16`) atau diperluas (*expand*) ke ukuran penuh (`w-64`).
    - **Tab Navigasi Sidebar**:
-     - 📅 **Bookings**: Metrik reservasi dan tabel jadwal pemesanan ruangan dengan status badge (`CONFIRMED`, `PENDING`, `CANCELLED`).
+     - 📅 **Bookings**: Metrik reservasi dan tabel jadwal pemesanan ruangan dengan status badge (`CONFIRMED`, `BOOKED`, `CANCELLED`).
      - 🚪 **Rooms**: Metrik ruangan dan tabel daftar ruangan (kapasitas, fasilitas, lokasi, status ketersediaan).
      - 👥 **Users**: Metrik tim dan tabel direktori pengguna (nama, email, role `ADMIN` / `EMPLOYEE`).
      - 🚪 **Logout**: Tombol di bagian bawah sidebar untuk kembali ke halaman Login.
