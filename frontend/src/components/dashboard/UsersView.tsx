@@ -27,16 +27,28 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useUsers } from '@/hooks/useUsers';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from '@/components/dashboard/TablePagination';
 import { getUserRoleVariant } from '@/utils/status';
 import { formatDate } from '@/utils/date';
 
 /**
  * Name Function: UsersView
- * Description: User directory component displaying administrator vs employee metrics, account tables with initials avatars, and account deletion actions.
+ * Description: User directory component displaying administrator vs employee metrics, account tables with initials avatars, and account deletion actions with client-side pagination.
  * Reason: Enables real-time user management via useUsers with visual role badges and formatted registration timestamps.
  **/
 export function UsersView() {
   const { users, loading, error, deleteUser } = useUsers();
+
+  const {
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    totalItems,
+    paginatedItems: paginatedUsers,
+  } = usePagination(users, 10);
 
   const totalUsers = users.length;
   const adminUsers = users.filter((u) => u.role === 'ADMIN').length;
@@ -45,7 +57,7 @@ export function UsersView() {
   return (
     <div className="space-y-6">
       {/* Dynamic Statistics Cards */}
-      <section aria-label="Users Statistics" className="grid gap-4 sm:grid-cols-3">
+      <section aria-label="Users Statistics" className="grid gap-4 sm:grid-cols-3 mt-3">
         <StatCard
           title="Total Users"
           value={loading ? '...' : totalUsers}
@@ -71,7 +83,7 @@ export function UsersView() {
 
       {/* Users Table Card */}
       <Card className="border-border bg-card shadow-sm">
-        <CardHeader className="px-6 py-4 border-b border-border">
+        <CardHeader className="px-4 py-4 border-b border-border">
           <CardTitle className="text-base font-semibold">Users Directory</CardTitle>
           <CardDescription>
             Registered user accounts and system access roles
@@ -117,7 +129,7 @@ export function UsersView() {
                   </TableCell>
                 </TableRow>
               ) : (
-                users.map((user) => (
+                paginatedUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -125,10 +137,10 @@ export function UsersView() {
                           <AvatarFallback className="text-xs font-semibold">
                             {user.name
                               ? user.name
-                                  .split(' ')
-                                  .map((n) => n[0])
-                                  .slice(0, 2)
-                                  .join('')
+                                .split(' ')
+                                .map((n) => n[0])
+                                .slice(0, 2)
+                                .join('')
                               : 'U'}
                           </AvatarFallback>
                         </Avatar>
@@ -178,6 +190,16 @@ export function UsersView() {
               )}
             </TableBody>
           </Table>
+
+          {/* Table Pagination */}
+          <TablePagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
     </div>

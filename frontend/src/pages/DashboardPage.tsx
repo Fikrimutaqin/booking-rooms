@@ -1,8 +1,11 @@
+import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layouts/DashboardLayout';
 import { DashboardHeader } from '@/components/dashboard/Header';
 import { BookingsView } from '@/components/dashboard/BookingsView';
 import { RoomsView } from '@/components/dashboard/RoomsView';
 import { UsersView } from '@/components/dashboard/UsersView';
+import { HistoryView } from '@/components/dashboard/HistoryView';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,16 +18,22 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useDashboardState } from '@/hooks/useDashboardState';
+import { useAuth } from '@/hooks/useAuth';
+import { ROUTES } from '@/constants/routes';
 import type { DashboardPageProps } from '@/types/dashboard';
 
 export type { DashboardPageProps };
 
 /**
  * Name Function: DashboardPage
- * Description: Main dashboard orchestrator page managing tab views (Bookings, Rooms, Users), dynamic header, and action dialog modals.
- * Reason: Follows a presentational component pattern by delegating state and configuration to useDashboardState, keeping the page focused on layout composition.
+ * Description: Main dashboard orchestrator page managing tab views (Bookings, Rooms, Users, History), dynamic header, and action dialog modals with role-based access control.
+ * Reason: Follows a presentational component pattern by delegating state and configuration to useDashboardState, keeping the page focused on layout composition and RBAC.
  **/
 export function DashboardPage(props: DashboardPageProps) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+
   const {
     activeTab,
     setActiveTab,
@@ -39,6 +48,21 @@ export function DashboardPage(props: DashboardPageProps) {
     closeDialog,
   } = useDashboardState(props);
 
+  // RBAC Guard: If employee tries to access users tab, redirect to bookings
+  React.useEffect(() => {
+    if (user && user.role !== 'ADMIN' && activeTab === 'users') {
+      setActiveTab('bookings');
+    }
+  }, [user, activeTab, setActiveTab]);
+
+  const handleAction = () => {
+    if (activeTab === 'bookings' || activeTab === 'history') {
+      navigate(ROUTES.ADD_BOOKING);
+    } else {
+      openDialog();
+    }
+  };
+
   return (
     <DashboardLayout
       activeTab={activeTab}
@@ -50,19 +74,23 @@ export function DashboardPage(props: DashboardPageProps) {
       <DashboardHeader
         title={currentConfig.title}
         description={currentConfig.description}
-        actionLabel={currentConfig.actionLabel}
-        onAction={openDialog}
+        actionLabel={activeTab === 'rooms' && !isAdmin ? undefined : currentConfig.actionLabel}
+        onAction={handleAction}
         searchPlaceholder={currentConfig.searchPlaceholder}
         isSidebarCollapsed={isCollapsed}
         onExpandSidebar={expandSidebar}
       />
 
       {activeTab === 'bookings' && <BookingsView />}
-      {activeTab === 'rooms' && <RoomsView />}
-      {activeTab === 'users' && <UsersView />}
+      {activeTab === 'rooms' && (
+        <RoomsView isAddOpen={isDialogOpen} onAddOpenChange={setIsDialogOpen} />
+      )}
+      {activeTab === 'users' && isAdmin && <UsersView />}
+      {activeTab === 'history' && <HistoryView />}
 
-      {/* Shadcn UI Action Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      {/* Shadcn UI Action Dialog (Only for tabs without dedicated creation dialogs, e.g. users) */}
+      {activeTab === 'users' && isAdmin && (
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{currentConfig.actionLabel}</DialogTitle>
@@ -73,11 +101,11 @@ export function DashboardPage(props: DashboardPageProps) {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="action-name">Name / Title</Label>
-              <Input id="action-name" placeholder="Enter title or name..." />
+              <Input id="action-name" name="title" placeholder="Enter title or name..." />
             </div>
             <div className="space-y-2">
               <Label htmlFor="action-desc">Description / Notes</Label>
-              <Input id="action-desc" placeholder="Add a brief note..." />
+              <Input id="action-desc" name="notes" placeholder="Add a brief note..." />
             </div>
           </div>
           <DialogFooter className="flex sm:justify-end gap-2">
@@ -90,6 +118,7 @@ export function DashboardPage(props: DashboardPageProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      )}
     </DashboardLayout>
   );
 }

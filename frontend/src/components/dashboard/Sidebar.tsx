@@ -13,10 +13,10 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
-  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { SIDEBAR_NAV_ITEMS } from '@/constants/navigation';
+import { useAuth } from '@/hooks/useAuth';
 import type { SidebarProps } from '@/types/sidebar';
 
 export type { SidebarProps };
@@ -36,6 +36,13 @@ export function Sidebar({
   onCloseMobile,
   className,
 }: SidebarProps) {
+  const { user } = useAuth();
+
+  const visibleNavItems = SIDEBAR_NAV_ITEMS.filter((item) => {
+    if (!item.roles) return true;
+    return user?.role ? item.roles.includes(user.role) : false;
+  });
+
   return (
     <>
       {/* Mobile Backdrop */}
@@ -52,7 +59,7 @@ export function Sidebar({
         className={cn(
           'fixed inset-y-0 left-0 z-40 border-r border-border bg-card flex flex-col justify-between transition-all duration-300 ease-in-out md:static md:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
-          isCollapsed ? 'w-64 md:w-16' : 'w-64',
+          isCollapsed ? 'w-64 md:w-16' : 'w-58',
           className
         )}
         aria-label="Application Sidebar"
@@ -104,15 +111,13 @@ export function Sidebar({
             </div>
           </SidebarHeader>
 
-          <SidebarSeparator className="hidden md:block" />
-
           {/* Shadcn UI Navigation Landmark */}
           <SidebarContent className="p-3">
             <nav aria-label="Main Navigation">
               <SidebarGroup>
                 <SidebarGroupContent>
                   <SidebarMenu>
-                    {SIDEBAR_NAV_ITEMS.map((item) => {
+                    {visibleNavItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = activeTab === item.id;
 
@@ -149,30 +154,27 @@ export function Sidebar({
         </div>
 
         {/* Bottom Section: Logout Footer with Shadcn UI Menu */}
-        <div>
-          <SidebarSeparator />
-          <SidebarFooter className="p-3">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={onLogout}
-                  tooltip={isCollapsed ? 'Logout' : undefined}
-                  className={cn(
-                    'w-full transition-colors text-muted-foreground hover:bg-muted hover:text-foreground',
-                    isCollapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3'
-                  )}
-                >
-                  <LogOut className="h-4 w-4 shrink-0" />
-                  {!isCollapsed ? (
-                    <span>Logout</span>
-                  ) : (
-                    <span className="sr-only">Logout</span>
-                  )}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
-        </div>
+        <SidebarFooter className="p-3">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={onLogout}
+                tooltip={isCollapsed ? 'Logout' : undefined}
+                className={cn(
+                  'w-full transition-colors text-muted-foreground hover:bg-muted hover:text-foreground',
+                  isCollapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3'
+                )}
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                {!isCollapsed ? (
+                  <span>Logout</span>
+                ) : (
+                  <span className="sr-only">Logout</span>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
       </aside>
     </>
   );

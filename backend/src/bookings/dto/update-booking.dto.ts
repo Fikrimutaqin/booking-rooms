@@ -2,10 +2,12 @@
 import { Transform } from 'class-transformer';
 import {
   IsDate,
+  IsEnum,
   IsOptional,
   IsString,
   MaxLength,
 } from 'class-validator';
+import { BookingStatus } from '@prisma/client';
 
 // Import Others (Common etc)
 import {
@@ -40,5 +42,11 @@ export class UpdateBookingDto {
   @IsString()
   @MaxLength(500)
   description?: string;
+
+  @IsOptional()
+  @IsEnum(BookingStatus, {
+    message: `status must be one of: ${Object.values(BookingStatus).join(', ')}`,
+  })
+  status?: BookingStatus;
 }
 

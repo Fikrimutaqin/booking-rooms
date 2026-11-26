@@ -10,6 +10,7 @@ export interface NavItem {
   id: TabType;
   label: string;
   icon: ComponentType<{ className?: string }>;
+  roles?: Array<'ADMIN' | 'EMPLOYEE'>;
 }
 
 /**

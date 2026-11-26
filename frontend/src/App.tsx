@@ -3,7 +3,9 @@ import { AuthProvider } from '@/context/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from '@/components/auth/PublicOnlyRoute';
 import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { AddBookingPage } from '@/pages/AddBookingPage';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -15,6 +17,16 @@ import { useAuth } from '@/hooks/useAuth';
 function LoginRoute() {
   const navigate = useNavigate();
   return <LoginPage onLogin={() => navigate(ROUTES.DASHBOARD)} />;
+}
+
+/**
+ * Name Function: RegisterRoute
+ * Description: Route wrapper for the register page that redirects users to the dashboard upon successful registration.
+ * Reason: Decouples post-registration navigation logic from the pure RegisterPage view component.
+ **/
+function RegisterRoute() {
+  const navigate = useNavigate();
+  return <RegisterPage onRegister={() => navigate(ROUTES.DASHBOARD)} />;
 }
 
 /**
@@ -57,12 +69,32 @@ export function App() {
             }
           />
 
+          {/* Public register route with session guard */}
+          <Route
+            path={ROUTES.REGISTER}
+            element={
+              <PublicOnlyRoute>
+                <RegisterRoute />
+              </PublicOnlyRoute>
+            }
+          />
+
           {/* Protected dashboard route with auto-refresh guard */}
           <Route
             path={ROUTES.DASHBOARD}
             element={
               <ProtectedRoute>
                 <DashboardRoute />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected add booking route with calendar UI */}
+          <Route
+            path={ROUTES.ADD_BOOKING}
+            element={
+              <ProtectedRoute>
+                <AddBookingPage />
               </ProtectedRoute>
             }
           />

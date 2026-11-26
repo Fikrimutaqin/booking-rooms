@@ -39,7 +39,7 @@ import {
 })
 export class BookingsController {
   // Constructor for booking services
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(private readonly bookingsService: BookingsService) { }
 
   /**
    * Controller for creating booking
@@ -133,7 +133,7 @@ export class BookingsController {
    * @param user JWT payload
    * @returns Message of booking cancellation
    */
-  @Delete(':id')
+  @Patch(':id/cancel')
   @HttpCode(HttpStatus.OK)
   @ResponseMessage('Booking successfully cancelled')
   cancel(

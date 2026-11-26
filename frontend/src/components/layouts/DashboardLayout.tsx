@@ -49,7 +49,7 @@ export function DashboardLayout({
           variant="ghost"
           size="icon"
           onClick={() => setMobileOpen(!mobileOpen)}
-          aria-label={mobileOpen ? 'Tutup navigasi menu' : 'Buka navigasi menu'}
+          aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
         >
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
@@ -67,10 +67,7 @@ export function DashboardLayout({
       />
 
       {/* Main Content Area Landmark */}
-      <main
-        id="dashboard-main"
-        className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 space-y-6"
-      >
+      <main id="dashboard-main" className="flex-1 overflow-y-auto p-6 max-h-[100dvh]">
         {children}
       </main>
     </div>

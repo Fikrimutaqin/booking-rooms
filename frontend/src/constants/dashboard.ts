@@ -19,4 +19,10 @@ export const TAB_CONFIG: Record<TabType, TabConfig> = {
     actionLabel: 'Add User',
     searchPlaceholder: 'Search users...',
   },
+  history: {
+    title: 'Booking History',
+    description: 'Personal reservation history and logs for your meeting room bookings.',
+    actionLabel: 'Add Booking',
+    searchPlaceholder: 'Search my booking history...',
+  },
 };

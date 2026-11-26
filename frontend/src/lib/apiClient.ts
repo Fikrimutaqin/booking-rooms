@@ -106,10 +106,12 @@ async function attemptTokenRefresh(): Promise<string | null> {
   return refreshPromise;
 }
 
+const inFlightGetRequests = new Map<string, Promise<unknown>>();
+
 /**
  * Name Function: request
  * Description: Core HTTP client wrapper based on Fetch API managing query params, automated bearer auth headers, error parsing, and auto-retry on 401.
- * Reason: Centralizes HTTP abstraction with JSON deserialization, NestJS response normalization, and transparent access token rotation retry.
+ * Reason: Centralizes HTTP abstraction with JSON deserialization, NestJS response normalization, transparent access token rotation retry, and in-flight GET deduplication.
  **/
 async function request<T = unknown>(
   endpoint: string,
@@ -131,71 +133,90 @@ async function request<T = unknown>(
     }
   }
 
-  // Ambil accessToken dari cookie jika tidak di-pass manual
+  // Retrieve accessToken from cookies if not passed explicitly
   const authToken = token ?? getAccessToken();
 
-  const requestHeaders: Record<string, string> = {
-    Accept: 'application/json',
-    ...(customConfig.body ? { 'Content-Type': 'application/json' } : {}),
-    ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-    ...(headers as Record<string, string>),
-  };
+  const method = (customConfig.method || 'GET').toUpperCase();
+  const isGet = method === 'GET';
+  const requestKey = isGet ? `${url}::${authToken ?? ''}` : null;
 
-  const response = await fetch(url, {
-    ...customConfig,
-    headers: requestHeaders,
-  });
-
-  // Handle 401 Unauthorized via transparent refresh token retry
-  if (
-    response.status === 401 &&
-    !_retry &&
-    !endpoint.includes('/auth/login') &&
-    !endpoint.includes('/auth/refresh')
-  ) {
-    const newToken = await attemptTokenRefresh();
-    if (newToken) {
-      return request<T>(endpoint, {
-        ...options,
-        _retry: true,
-        token: newToken,
-      });
-    }
+  if (requestKey && inFlightGetRequests.has(requestKey)) {
+    return inFlightGetRequests.get(requestKey) as Promise<T>;
   }
 
-  if (response.status === 204) {
-    return null as T;
-  }
+  const execution = (async (): Promise<T> => {
+    const requestHeaders: Record<string, string> = {
+      Accept: 'application/json',
+      ...(customConfig.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      ...(headers as Record<string, string>),
+    };
 
-  let json: Record<string, unknown> | null = null;
-  const contentType = response.headers.get('content-type');
-  if (contentType && contentType.includes('application/json')) {
-    try {
-      json = await response.json();
-    } catch {
-      json = null;
-    }
-  }
+    const response = await fetch(url, {
+      ...customConfig,
+      headers: requestHeaders,
+    });
 
-  if (!response.ok) {
-    let errorMessage = `HTTP Error ${response.status}: ${response.statusText}`;
-    if (json) {
-      if (Array.isArray(json.message)) {
-        errorMessage = json.message.join(', ');
-      } else if (typeof json.message === 'string') {
-        errorMessage = json.message;
-      } else if (typeof json.error === 'string') {
-        errorMessage = json.error;
+    // Handle 401 Unauthorized via transparent refresh token retry
+    if (
+      response.status === 401 &&
+      !_retry &&
+      !endpoint.includes('/auth/login') &&
+      !endpoint.includes('/auth/refresh')
+    ) {
+      const newToken = await attemptTokenRefresh();
+      if (newToken) {
+        return request<T>(endpoint, {
+          ...options,
+          _retry: true,
+          token: newToken,
+        });
       }
     }
-    throw new ApiError(errorMessage, response.status, json);
+
+    if (response.status === 204) {
+      return null as T;
+    }
+
+    let json: Record<string, unknown> | null = null;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        json = await response.json();
+      } catch {
+        json = null;
+      }
+    }
+
+    if (!response.ok) {
+      let errorMessage = `HTTP Error ${response.status}: ${response.statusText}`;
+      if (json) {
+        if (Array.isArray(json.message)) {
+          errorMessage = json.message.join(', ');
+        } else if (typeof json.message === 'string') {
+          errorMessage = json.message;
+        } else if (typeof json.error === 'string') {
+          errorMessage = json.error;
+        }
+      }
+      throw new ApiError(errorMessage, response.status, json);
+    }
+
+    if (json && typeof json === 'object' && 'data' in json && 'statusCode' in json) {
+      return json.data as T;
+    }
+
+    return json as T;
+  })();
+
+  if (requestKey) {
+    inFlightGetRequests.set(requestKey, execution);
+    execution.finally(() => {
+      inFlightGetRequests.delete(requestKey);
+    });
   }
 
-  if (json && typeof json === 'object' && 'data' in json && 'statusCode' in json) {
-    return json.data as T;
-  }
-
-  return json as T;
+  return execution;
 }
 
 export const apiClient = {

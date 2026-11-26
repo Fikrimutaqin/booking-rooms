@@ -4,6 +4,7 @@ export interface BookingRoomSummary {
   id: string;
   name: string;
   location?: string | null;
+  capacity?: number;
 }
 
 export interface BookingUserSummary {
@@ -33,4 +34,20 @@ export interface BookingWithRoom {
  */
 export interface BookingDetail extends BookingWithRoom {
   user: BookingUserSummary;
+}
+
+export interface RecurringConflictItem {
+  week: number;
+  date: string;
+  startAt: string;
+  endAt: string;
+  clashTitle: string;
+}
+
+export interface RecurringBookingResponse {
+  isRecurring: true;
+  totalRequested: number;
+  totalCreated: number;
+  bookings: BookingWithRoom[];
+  conflicts: RecurringConflictItem[];
 }

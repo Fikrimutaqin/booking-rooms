@@ -2,10 +2,10 @@ import type * as React from 'react';
 
 /**
  * Name Type: TabType
- * Description: String literal union type for active dashboard navigation tabs ('bookings', 'rooms', 'users').
+ * Description: String literal union type for active dashboard navigation tabs ('bookings', 'rooms', 'users', 'history').
  * Reason: Enforces type safety ensuring tab values are strictly recognized and mapped in TAB_CONFIG.
  **/
-export type TabType = 'bookings' | 'rooms' | 'users';
+export type TabType = 'bookings' | 'rooms' | 'users' | 'history';
 
 /**
  * Name Interface: BookingItem
@@ -17,7 +17,7 @@ export interface BookingItem {
   room: string;
   user: string;
   date: string;
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
+  status: 'CONFIRMED' | 'BOOKED' | 'CANCELLED';
 }
 
 /**

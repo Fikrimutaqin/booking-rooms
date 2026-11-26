@@ -1,27 +1,9 @@
 import { useFetch } from './useFetch';
 import { useApi } from './useApi';
 import { apiClient } from '@/lib/apiClient';
+import type { RoomApiItem, CreateRoomPayload } from '@/types/room';
 
-export interface RoomApiItem {
-  id: string;
-  name: string;
-  description?: string | null;
-  capacity: number;
-  facilities: string[];
-  location: string;
-  isAvailable: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface CreateRoomPayload {
-  name: string;
-  description?: string;
-  capacity: number;
-  facilities: string[];
-  location: string;
-  isAvailable?: boolean;
-}
+export type { RoomApiItem, CreateRoomPayload };
 
 /**
  * Name Function: useRooms

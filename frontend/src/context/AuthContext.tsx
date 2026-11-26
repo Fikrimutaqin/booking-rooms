@@ -7,7 +7,7 @@ import {
   clearAuthCookies,
 } from '@/lib/cookies';
 import { AuthContext } from './authContextDef';
-import type { AuthUser, LoginResponse, RefreshTokenResponse } from '@/types/auth';
+import type { AuthUser, LoginResponse, RefreshTokenResponse, RegisterPayload, RegisterResponse } from '@/types/auth';
 
 /**
  * Name Function: AuthProvider
@@ -149,6 +149,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [fetchProfile]
   );
 
+  // Register handler
+  const register = React.useCallback(
+    async (payload: RegisterPayload): Promise<RegisterResponse> => {
+      const res = await apiClient.post<RegisterResponse>('/auth/register', payload);
+      if (payload.email && payload.password) {
+        await login(payload.email, payload.password);
+      }
+      return res;
+    },
+    [login]
+  );
+
   // Logout handler
   const logout = React.useCallback(() => {
     clearAuthCookies();
@@ -162,10 +174,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated,
       isLoadingSession,
       login,
+      register,
       logout,
       refresh,
     }),
-    [user, isAuthenticated, isLoadingSession, login, logout, refresh]
+    [user, isAuthenticated, isLoadingSession, login, register, logout, refresh]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

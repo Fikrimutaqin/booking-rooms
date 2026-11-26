@@ -17,6 +17,45 @@ export interface LoginPageProps {
 }
 
 /**
+ * Name Interface: RegisterPayload
+ * Description: Data transfer payload for user registration (POST /auth/register).
+ * Reason: Matches backend RegisterDto requirements (name, email, password).
+ **/
+export interface RegisterPayload {
+  name: string;
+  email: string;
+  password: string;
+}
+
+/**
+ * Name Interface: RegisterResponse
+ * Description: Response payload shape returned by the POST /auth/register endpoint.
+ * Reason: Encapsulates created user profile and initial access token.
+ **/
+export interface RegisterResponse {
+  user: AuthUser;
+  accessToken: string;
+}
+
+/**
+ * Name Interface: RegisterFormProps
+ * Description: Props contract for the RegisterForm component.
+ * Reason: Provides optional onRegister callback so parent components can initiate routing upon successful registration.
+ **/
+export interface RegisterFormProps {
+  onRegister?: () => void;
+}
+
+/**
+ * Name Interface: RegisterPageProps
+ * Description: Props contract for the RegisterPage component.
+ * Reason: Bridges top-level page router events to the child RegisterForm component.
+ **/
+export interface RegisterPageProps {
+  onRegister?: () => void;
+}
+
+/**
  * Name Interface: AuthUser
  * Description: User profile entity type representing an authenticated user in the frontend state.
  * Reason: Maps safe user profile payload attributes (excluding password & sensitive tokens) received from the API.

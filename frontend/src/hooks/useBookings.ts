@@ -1,33 +1,11 @@
 import { useFetch } from './useFetch';
 import { useApi } from './useApi';
 import { apiClient } from '@/lib/apiClient';
-
-export interface BookingApiItem {
-  id: string;
-  roomId: string;
-  userId: string;
-  title: string;
-  startAt: string;
-  endAt: string;
-  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
-  room?: {
-    id: string;
-    name: string;
-    location: string;
-  };
-  user?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-}
-
-export interface CreateBookingPayload {
-  roomId: string;
-  title: string;
-  startAt: string;
-  endAt: string;
-}
+import {
+  BookingApiItem,
+  CreateBookingPayload,
+  RecurringBookingResult,
+} from '@/types/booking';
 
 /**
  * Name Function: useBookings
@@ -48,43 +26,68 @@ export function useBookings() {
 
   /**
    * Name Function: createBooking
-   * Description: Dispatches new booking data to POST /bookings and prepends the returned record to the local bookings array.
+   * Description: Dispatches new single or recurring booking payload to POST /bookings and prepends returned records to local state.
    * Reason: Provides fast UI feedback by updating the bookings state directly without waiting for a second network query.
    **/
-  const createBooking = async (payload: CreateBookingPayload): Promise<BookingApiItem> => {
-    const newBooking = await mutate<BookingApiItem>(() =>
-      apiClient.post<BookingApiItem>('/bookings', payload)
+  const createBooking = async (
+    payload: CreateBookingPayload,
+  ): Promise<BookingApiItem | RecurringBookingResult> => {
+    const result = await mutate<BookingApiItem | RecurringBookingResult>(() =>
+      apiClient.post<BookingApiItem | RecurringBookingResult>('/bookings', payload),
     );
     setData((prev) => {
-      if (Array.isArray(prev)) return [newBooking, ...prev];
+      const newItems: BookingApiItem[] =
+        result && typeof result === 'object' && 'isRecurring' in result && Array.isArray(result.bookings)
+          ? result.bookings
+          : [result as BookingApiItem];
+
+      if (Array.isArray(prev)) return [...newItems, ...prev];
       if (prev && typeof prev === 'object' && 'data' in prev) {
-        return { ...prev, data: [newBooking, ...prev.data] };
+        return { ...prev, data: [...newItems, ...prev.data] };
       }
-      return [newBooking];
+      return newItems;
     });
-    return newBooking;
+    return result;
   };
 
   /**
    * Name Function: cancelBooking
-   * Description: Dispatches a booking cancellation request to PATCH /bookings/:id setting status to CANCELLED.
-   * Reason: Updates reservation status on the server and synchronizes the table row locally to immediately reflect the cancelled badge.
+   * Description: Dispatches a booking status update to CANCELLED via PATCH /bookings/:id.
+   * Reason: Soft-cancelling a reservation is a partial entity state modification, properly handled via PATCH in REST architecture.
    **/
   const cancelBooking = async (id: string): Promise<BookingApiItem> => {
     const cancelled = await mutate<BookingApiItem>(() =>
       apiClient.patch<BookingApiItem>(`/bookings/${id}`, { status: 'CANCELLED' })
     );
     setData((prev) => {
-      if (Array.isArray(prev)) return prev.map((item) => (item.id === id ? cancelled : item));
+      if (Array.isArray(prev)) {
+        return prev.map((item) =>
+          item.id === id ? { ...item, ...cancelled, status: 'CANCELLED' } : item
+        );
+      }
       if (prev && typeof prev === 'object' && 'data' in prev) {
         return {
           ...prev,
-          data: prev.data.map((item) => (item.id === id ? cancelled : item)),
+          data: prev.data.map((item) =>
+            item.id === id ? { ...item, ...cancelled, status: 'CANCELLED' } : item
+          ),
         };
       }
-      return [cancelled];
+      return [{ ...cancelled, status: 'CANCELLED' }];
     });
     return cancelled;
+  };
+
+  /**
+   * Name Function: getBookingDetail
+   * Description: Fetches specific reservation details from GET /bookings/:id.
+   * Reason: Allows on-demand retrieval of full booking metadata when needed for inspection or edit forms.
+   **/
+  const getBookingDetail = async (id: string): Promise<BookingApiItem> => {
+    const result = await mutate<BookingApiItem>(() =>
+      apiClient.get<BookingApiItem>(`/bookings/${id}`)
+    );
+    return result;
   };
 
   return {
@@ -95,5 +98,8 @@ export function useBookings() {
     refetch,
     createBooking,
     cancelBooking,
+    getBookingDetail,
   };
 }
+
+export { useMyBookings } from './useMyBookings';
