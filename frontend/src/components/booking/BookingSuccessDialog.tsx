@@ -8,19 +8,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import type { BookingSuccessDialogProps } from '@/types/booking';
 
-export interface BookingSuccessDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  bookingData: {
-    title: string;
-    roomName: string;
-    date: string;
-    time: string;
-  } | null;
-  onViewList: () => void;
-  onBookAnother: () => void;
-}
+export type { BookingSuccessDialogProps };
 
 /**
  * Name Function: BookingSuccessDialog

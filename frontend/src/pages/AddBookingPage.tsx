@@ -10,8 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useBookings } from '@/hooks/useBookings';
-import { useRooms } from '@/hooks/useRooms';
+import { useAddBooking } from '@/hooks/useAddBooking';
 import { useAuth } from '@/hooks/useAuth';
 import { ROUTES } from '@/constants/routes';
 import { formatSchedule } from '@/utils/date';
@@ -20,215 +19,39 @@ import { getBookingStatusVariant } from '@/utils/status';
 /**
  * Name Function: AddBookingPage
  * Description: Dedicated room booking page featuring an interactive monthly calendar date picker, time slot selectors, conflict checks, and transparent error popup dialogs.
- * Reason: Gives users an intuitive calendar overview of room schedules and provides friendly explanations when booking constraints or collisions occur.
+ * Reason: Keeps the component purely presentational by delegating form state, room selection, and validation to useAddBooking.
  **/
 export function AddBookingPage() {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { bookings, createBooking, isMutating } = useBookings();
-  const { rooms, loading: loadingRooms } = useRooms();
-
-  // Sidebar collapse state
   const [isCollapsed, setIsCollapsed] = React.useState(false);
 
-  // Form State
-  const [selectedDate, setSelectedDate] = React.useState<Date>(() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
-
-  const [title, setTitle] = React.useState('');
-  const [roomId, setRoomId] = React.useState('');
-  const [startTime, setStartTime] = React.useState('09:00');
-  const [endTime, setEndTime] = React.useState('10:00');
-
-  // Popup Dialogs State
-  const [errorDialogState, setErrorDialogState] = React.useState<{
-    open: boolean;
-    error: string | null;
-  }>({
-    open: false,
-    error: null,
-  });
-
-  const [successDialogState, setSuccessDialogState] = React.useState<{
-    open: boolean;
-    data: {
-      title: string;
-      roomName: string;
-      date: string;
-      time: string;
-    } | null;
-  }>({
-    open: false,
-    data: null,
-  });
-
-  // Automatically select the first available room once rooms load
-  React.useEffect(() => {
-    if (!roomId && rooms.length > 0) {
-      const firstAvailable = rooms.find((r) => r.isAvailable) || rooms[0];
-      if (firstAvailable) {
-        setRoomId(firstAvailable.id);
-      }
-    }
-  }, [rooms, roomId]);
-
-  // Extract unique booked dates (YYYY-MM-DD) for calendar dot indicators
-  const bookedDates = React.useMemo(() => {
-    const set = new Set<string>();
-    bookings.forEach((b) => {
-      if (b.startAt && b.status !== 'CANCELLED') {
-        const d = new Date(b.startAt);
-        set.add(d.toISOString().slice(0, 10));
-      }
-    });
-    return Array.from(set);
-  }, [bookings]);
-
-  // Bookings on the currently selected date
-  const selectedDateStr = React.useMemo(() => {
-    const year = selectedDate.getFullYear();
-    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
-    const day = String(selectedDate.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }, [selectedDate]);
-
-  const selectedDateFormatted = selectedDate.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-
-  const dayBookings = React.useMemo(() => {
-    return bookings.filter((b) => {
-      if (!b.startAt || b.status === 'CANCELLED') return false;
-      const d = new Date(b.startAt);
-      return d.toISOString().slice(0, 10) === selectedDateStr;
-    });
-  }, [bookings, selectedDateStr]);
-
-  // Duration in minutes calculation
-  const durationMinutes = React.useMemo(() => {
-    const [startH, startM] = startTime.split(':').map(Number);
-    const [endH, endM] = endTime.split(':').map(Number);
-    const startTotal = startH * 60 + startM;
-    const endTotal = endH * 60 + endM;
-    return endTotal - startTotal;
-  }, [startTime, endTime]);
-
-  const durationLabel = React.useMemo(() => {
-    if (durationMinutes <= 0) return 'Invalid duration';
-    const hours = Math.floor(durationMinutes / 60);
-    const mins = durationMinutes % 60;
-    if (hours > 0 && mins > 0) return `${hours} hr ${mins} mins`;
-    if (hours > 0) return `${hours} hour${hours > 1 ? 's' : ''}`;
-    return `${mins} minutes`;
-  }, [durationMinutes]);
-
-  // Submit Handler
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // 1. Title validation
-    if (!title.trim()) {
-      setErrorDialogState({
-        open: true,
-        error: 'Please provide a title for the meeting (e.g. "Product Sync", "Board Meeting").',
-      });
-      return;
-    }
-
-    // 2. Room validation
-    if (!roomId) {
-      setErrorDialogState({
-        open: true,
-        error: 'Please select an available meeting room from the dropdown list.',
-      });
-      return;
-    }
-
-    // 3. Time comparison
-    if (durationMinutes <= 0) {
-      setErrorDialogState({
-        open: true,
-        error: 'The meeting end time must be scheduled after the start time.',
-      });
-      return;
-    }
-
-    // 4. Duration constraints (30 mins - 240 mins)
-    if (durationMinutes < 30 || durationMinutes > 240) {
-      setErrorDialogState({
-        open: true,
-        error: 'Booking duration must be between 30 minutes to 4 hours.',
-      });
-      return;
-    }
-
-    // 5. Working hours check (08:00 - 18:00 WIB)
-    const [startH, startM] = startTime.split(':').map(Number);
-    const [endH, endM] = endTime.split(':').map(Number);
-    const startMins = startH * 60 + startM;
-    const endMins = endH * 60 + endM;
-
-    if (startMins < 480 || endMins > 1080) {
-      setErrorDialogState({
-        open: true,
-        error: 'Booking must be within working hours 08.00-18.00 WIB on the same day.',
-      });
-      return;
-    }
-
-    // 6. Past check
-    const startDateTime = new Date(`${selectedDateStr}T${startTime}:00+07:00`);
-    const endDateTime = new Date(`${selectedDateStr}T${endTime}:00+07:00`);
-
-    if (startDateTime.getTime() < Date.now()) {
-      setErrorDialogState({
-        open: true,
-        error: "Can't order for past time. Please select an upcoming date and time.",
-      });
-      return;
-    }
-
-    try {
-      await createBooking({
-        roomId,
-        title: title.trim(),
-        startAt: startDateTime.toISOString(),
-        endAt: endDateTime.toISOString(),
-      });
-
-      const selectedRoom = rooms.find((r) => r.id === roomId);
-
-      setSuccessDialogState({
-        open: true,
-        data: {
-          title: title.trim(),
-          roomName: selectedRoom ? selectedRoom.name : 'Meeting Room',
-          date: selectedDateFormatted,
-          time: `${startTime} - ${endTime} WIB`,
-        },
-      });
-    } catch (err: unknown) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'Failed to create booking';
-      setErrorDialogState({
-        open: true,
-        error: errorMessage,
-      });
-    }
-  };
-
-  const handleResetForm = () => {
-    setTitle('');
-    setStartTime('09:00');
-    setEndTime('10:00');
-    setSuccessDialogState({ open: false, data: null });
-  };
+  const {
+    selectedDate,
+    setSelectedDate,
+    title,
+    setTitle,
+    roomId,
+    setRoomId,
+    startTime,
+    setStartTime,
+    endTime,
+    setEndTime,
+    bookedDates,
+    selectedDateFormatted,
+    dayBookings,
+    durationMinutes,
+    durationLabel,
+    rooms,
+    loadingRooms,
+    isMutating,
+    errorDialogState,
+    closeErrorDialog,
+    successDialogState,
+    closeSuccessDialog,
+    handleResetForm,
+    handleSubmit,
+  } = useAddBooking();
 
   return (
     <DashboardLayout
@@ -479,14 +302,14 @@ export function AddBookingPage() {
       {/* Error Popup Dialog */}
       <BookingErrorDialog
         open={errorDialogState.open}
-        onOpenChange={(open) => setErrorDialogState((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) => !open && closeErrorDialog()}
         rawError={errorDialogState.error}
       />
 
       {/* Success Popup Dialog */}
       <BookingSuccessDialog
         open={successDialogState.open}
-        onOpenChange={(open) => setSuccessDialogState((prev) => ({ ...prev, open }))}
+        onOpenChange={(open) => !open && closeSuccessDialog()}
         bookingData={successDialogState.data}
         onViewList={() => navigate(ROUTES.DASHBOARD)}
         onBookAnother={handleResetForm}

@@ -1,4 +1,4 @@
-import { DoorOpen, CheckCircle2, AlertCircle, MoreHorizontal, Loader2, Trash2 } from 'lucide-react';
+import { DoorOpen, CheckCircle2, MoreHorizontal, Loader2, Trash2 } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,6 @@ export function RoomsView() {
 
   const totalRooms = rooms.length;
   const availableRooms = rooms.filter((r) => r.isAvailable).length;
-  const maintenanceRooms = rooms.filter((r) => !r.isAvailable).length;
 
   return (
     <div className="space-y-6">
@@ -56,13 +55,6 @@ export function RoomsView() {
           value={loading ? '...' : availableRooms}
           description="Ready for booking"
           icon={CheckCircle2}
-          className="border-border bg-card"
-        />
-        <StatCard
-          title="Maintenance"
-          value={loading ? '...' : maintenanceRooms}
-          description="Currently out of service"
-          icon={AlertCircle}
           className="border-border bg-card"
         />
       </section>

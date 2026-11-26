@@ -2,15 +2,10 @@ import * as React from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { DAYS_OF_WEEK, generateCalendarDays } from '@/utils/calendar';
+import type { BookingCalendarProps } from '@/types/booking';
 
-export interface BookingCalendarProps {
-  selectedDate: Date;
-  onSelectDate: (date: Date) => void;
-  bookedDates?: string[]; // YYYY-MM-DD strings
-  className?: string;
-}
-
-const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+export type { BookingCalendarProps };
 
 /**
  * Name Function: BookingCalendar
@@ -56,87 +51,9 @@ export function BookingCalendar({
     onSelectDate(now);
   };
 
-  // Generate calendar days grid (Monday-indexed)
+  // Delegate day grid calculation to pure calendar utility
   const calendarDays = React.useMemo(() => {
-    const year = currentMonth.getFullYear();
-    const month = currentMonth.getMonth();
-
-    // First day of current month
-    const firstDay = new Date(year, month, 1);
-    // 0 = Sun, 1 = Mon ... 6 = Sat -> convert to 0 = Mon ... 6 = Sun
-    const firstDayIndex = (firstDay.getDay() + 6) % 7;
-
-    // Total days in current month
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    // Days in previous month
-    const daysInPrevMonth = new Date(year, month, 0).getDate();
-
-    const days: Array<{
-      date: Date;
-      dateStr: string;
-      isCurrentMonth: boolean;
-      isToday: boolean;
-      isPast: boolean;
-      isSelected: boolean;
-      hasBookings: boolean;
-    }> = [];
-
-    // Prev month padding days
-    for (let i = firstDayIndex - 1; i >= 0; i--) {
-      const d = new Date(year, month - 1, daysInPrevMonth - i);
-      d.setHours(0, 0, 0, 0);
-      const dateStr = d.toISOString().slice(0, 10);
-      days.push({
-        date: d,
-        dateStr,
-        isCurrentMonth: false,
-        isToday: d.getTime() === today.getTime(),
-        isPast: d.getTime() < today.getTime(),
-        isSelected: false,
-        hasBookings: bookedDates.includes(dateStr),
-      });
-    }
-
-    // Current month days
-    for (let dayNum = 1; dayNum <= daysInMonth; dayNum++) {
-      const d = new Date(year, month, dayNum);
-      d.setHours(0, 0, 0, 0);
-      const dateStr = d.toISOString().slice(0, 10);
-      const isSelected =
-        selectedDate.getFullYear() === d.getFullYear() &&
-        selectedDate.getMonth() === d.getMonth() &&
-        selectedDate.getDate() === d.getDate();
-
-      days.push({
-        date: d,
-        dateStr,
-        isCurrentMonth: true,
-        isToday: d.getTime() === today.getTime(),
-        isPast: d.getTime() < today.getTime(),
-        isSelected,
-        hasBookings: bookedDates.includes(dateStr),
-      });
-    }
-
-    // Next month padding days to complete 35 or 42 cells
-    const remainingCells = (7 - (days.length % 7)) % 7;
-    for (let i = 1; i <= remainingCells; i++) {
-      const d = new Date(year, month + 1, i);
-      d.setHours(0, 0, 0, 0);
-      const dateStr = d.toISOString().slice(0, 10);
-      days.push({
-        date: d,
-        dateStr,
-        isCurrentMonth: false,
-        isToday: d.getTime() === today.getTime(),
-        isPast: d.getTime() < today.getTime(),
-        isSelected: false,
-        hasBookings: bookedDates.includes(dateStr),
-      });
-    }
-
-    return days;
+    return generateCalendarDays(currentMonth, today, selectedDate, bookedDates);
   }, [currentMonth, today, selectedDate, bookedDates]);
 
   return (
@@ -202,22 +119,19 @@ export function BookingCalendar({
               onClick={() => isClickable && onSelectDate(item.date)}
               className={cn(
                 'relative flex flex-col items-center justify-center h-10 rounded-lg text-xs transition-colors',
-                // Text colors for non-current month or past
                 !item.isCurrentMonth && 'text-muted-foreground/40 pointer-events-none',
                 item.isCurrentMonth && item.isPast && 'text-muted-foreground/50 cursor-not-allowed bg-muted/20',
                 item.isCurrentMonth && !item.isPast && 'hover:bg-muted text-foreground cursor-pointer',
-                // Today border
                 item.isToday && !item.isSelected && 'border border-primary font-bold text-primary',
-                // Selected state
                 item.isSelected &&
-                  'bg-primary text-primary-foreground font-semibold shadow hover:bg-primary/95',
+                  'bg-primary text-primary-foreground font-semibold shadow hover:bg-primary/95'
               )}
               aria-label={`Select ${item.dateStr}`}
               aria-pressed={item.isSelected}
             >
               <span>{item.date.getDate()}</span>
 
-              {/* Indicator dot if date has bookings */}
+              {/* Dot indicator if day has bookings */}
               {item.hasBookings && (
                 <span
                   className={cn(
