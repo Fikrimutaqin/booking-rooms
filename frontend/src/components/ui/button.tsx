@@ -39,6 +39,11 @@ export interface ButtonProps
   asChild?: boolean
 }
 
+/**
+ * Name Function: Button
+ * Description: Interactive button component based on Class Variance Authority (CVA) with visual variants (default, outline, ghost, destructive, link) and sizes (default, sm, lg, icon).
+ * Reason: Standardizes button interactions across the app with polymorphic slot rendering via the asChild prop (Radix UI Slot).
+ **/
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"

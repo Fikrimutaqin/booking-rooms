@@ -26,10 +26,16 @@ export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
+/**
+ * Name Function: Badge
+ * Description: Pill-shaped status badge with monochrome styling variants (default, secondary, outline, destructive).
+ * Reason: Displays reservation status, room availability, and user roles concisely and neatly inside tables and cards.
+ **/
 function Badge({ className, variant, ...props }: BadgeProps) {
   return (
     <div className={cn(badgeVariants({ variant }), className)} {...props} />
   )
 }
 
+/* eslint-disable-next-line react-refresh/only-export-components */
 export { Badge, badgeVariants }

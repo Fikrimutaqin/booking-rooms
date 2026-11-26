@@ -1,14 +1,13 @@
-import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { StatCardProps } from '@/types/dashboard';
 
-export interface StatCardProps {
-  title: string;
-  value: string | number;
-  description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  className?: string;
-}
+export type { StatCardProps };
 
+/**
+ * Name Function: StatCard
+ * Description: Summary metric indicator card rendering title, numeric/string value, brief description, and associated Lucide icon.
+ * Reason: Presents primary metrics uniformly across all dashboard tabs in a clean responsive grid positioned above data tables.
+ **/
 export function StatCard({
   title,
   value,
@@ -31,3 +30,5 @@ export function StatCard({
     </Card>
   );
 }
+
+export default StatCard;

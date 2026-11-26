@@ -270,7 +270,8 @@ cp .env.example .env
 ```
 Isi file `.env`:
 ```env
-VITE_API_URL=http://localhost:3000/v1
+API_URL=https://booking-rooms-rust.vercel.app/api/v1
+VITE_API_URL=https://booking-rooms-rust.vercel.app/api/v1
 ```
 
 #### C. Menjalankan Frontend Dev Server
@@ -297,6 +298,80 @@ Buka browser di: **`http://localhost:5173`**.
      - 👥 **Users**: Metrik tim dan tabel direktori pengguna (nama, email, role `ADMIN` / `EMPLOYEE`).
      - 🚪 **Logout**: Tombol di bagian bawah sidebar untuk kembali ke halaman Login.
    - **Zero Backend Integration**: Berjalan murni di sisi frontend dengan mock data sehingga aman untuk pengujian UI tanpa server aktif.
+
+---
+
+## 🪝 Pola Pemanggilan API via Custom Hooks (Frontend)
+
+Frontend telah dilengkapi dengan arsitektur pemanggilan API yang membaca variabel `API_URL` dari `.env`, otomatis menyematkan header *Bearer Token*, dan dapat dipanggil langsung dari komponen React melalui **Custom Hooks**:
+
+### 1. Hook Deklaratif `useFetch` (Otomatis ambil data GET saat mount)
+```tsx
+import { useFetch } from '@/hooks';
+
+export function RoomsList() {
+  const { data: rooms, loading, error, refetch } = useFetch<RoomItem[]>('/rooms');
+
+  if (loading) return <div>Memuat data ruangan...</div>;
+  if (error) return <div>Gagal memuat: {error}</div>;
+
+  return (
+    <div>
+      {rooms?.map((room) => (
+        <div key={room.id}>{room.name}</div>
+      ))}
+      <button onClick={() => refetch()}>Refresh Data</button>
+    </div>
+  );
+}
+```
+
+### 2. Hook Imperatif `useApi` (Untuk mutasi form: POST, PATCH, DELETE)
+```tsx
+import { useApi, apiClient } from '@/hooks';
+
+export function AddRoomForm() {
+  const { execute, loading, error } = useApi();
+
+  const handleCreate = async () => {
+    await execute(() =>
+      apiClient.post('/rooms', {
+        name: 'Meeting Room Alpha',
+        capacity: 10,
+        facilities: ['TV', 'Whiteboard'],
+        location: 'Lt. 2',
+      })
+    );
+    alert('Ruangan berhasil ditambahkan!');
+  };
+
+  return (
+    <button onClick={handleCreate} disabled={loading}>
+      {loading ? 'Menyimpan...' : 'Tambah Ruangan'}
+    </button>
+  );
+}
+```
+
+### 3. Domain Hook Siap Pakai (`useRooms`, `useBookings`, `useAuth`)
+```tsx
+import { useRooms } from '@/hooks';
+
+export function RoomsView() {
+  const { rooms, loading, error, createRoom, deleteRoom } = useRooms();
+
+  return (
+    <div>
+      {rooms.map((room) => (
+        <div key={room.id}>
+          {room.name} - Kapasitas: {room.capacity}
+          <button onClick={() => deleteRoom(room.id)}>Hapus</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+```
 
 ---
 
