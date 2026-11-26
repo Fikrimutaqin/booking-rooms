@@ -45,6 +45,8 @@ import { getBookingStatusVariant } from '@/utils/status';
 import { formatSchedule, formatDateTime, formatDuration } from '@/utils/date';
 import { ROUTES } from '@/constants/routes';
 import { BookingErrorDialog } from '@/components/booking/BookingErrorDialog';
+import { CancelBookingConfirmDialog } from '@/components/dashboard/CancelBookingConfirmDialog';
+import type { BookingApiItem } from '@/types/booking';
 import { cn } from '@/lib/utils';
 
 /**
@@ -59,6 +61,21 @@ export function HistoryView() {
 
     const [showErrorDialog, setShowErrorDialog] = React.useState(false);
     const [expandedHistoryIds, setExpandedHistoryIds] = React.useState<Record<string, boolean>>({});
+    const [bookingToCancel, setBookingToCancel] = React.useState<BookingApiItem | null>(null);
+    const [isCancelling, setIsCancelling] = React.useState(false);
+
+    const handleConfirmCancel = async () => {
+        if (!bookingToCancel) return;
+        try {
+            setIsCancelling(true);
+            await cancelBooking(bookingToCancel.id);
+            setBookingToCancel(null);
+        } catch {
+            // Handled by useMyBookings error state
+        } finally {
+            setIsCancelling(false);
+        }
+    };
 
     const toggleExpand = (id: string) => {
         setExpandedHistoryIds((prev) => ({
@@ -320,7 +337,7 @@ export function HistoryView() {
                                                             </DropdownMenuItem> */}
                                                             {!isCancelled && !isPast && (
                                                                 <DropdownMenuItem
-                                                                    onClick={() => cancelBooking(booking.id)}
+                                                                    onClick={() => setBookingToCancel(booking)}
                                                                     className="gap-2 text-destructive focus:text-destructive cursor-pointer"
                                                                 >
                                                                     Cancel Booking
@@ -433,6 +450,14 @@ export function HistoryView() {
                 open={showErrorDialog}
                 onOpenChange={setShowErrorDialog}
                 rawError={error}
+            />
+            {/* Cancel Booking Confirmation Popup */}
+            <CancelBookingConfirmDialog
+                open={Boolean(bookingToCancel)}
+                onOpenChange={(open) => !open && setBookingToCancel(null)}
+                booking={bookingToCancel}
+                onConfirm={handleConfirmCancel}
+                isLoading={isCancelling}
             />
         </div>
     );

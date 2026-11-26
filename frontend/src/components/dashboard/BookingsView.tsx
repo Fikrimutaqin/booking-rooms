@@ -37,6 +37,7 @@ import { ROUTES } from '@/constants/routes';
 import { cn } from '@/lib/utils';
 import React from 'react';
 import { BookingErrorDialog } from '../booking/BookingErrorDialog';
+import { CancelBookingConfirmDialog } from '@/components/dashboard/CancelBookingConfirmDialog';
 import { BookingApiItem } from '@/types/booking';
 
 /**
@@ -51,6 +52,21 @@ export function BookingsView() {
 
   const [capacityFilter, setCapacityFilter] = React.useState<string>('ALL');
   const [expandedBookingIds, setExpandedBookingIds] = React.useState<Record<string, boolean>>({});
+  const [bookingToCancel, setBookingToCancel] = React.useState<BookingApiItem | null>(null);
+  const [isCancelling, setIsCancelling] = React.useState(false);
+
+  const handleConfirmCancel = async () => {
+    if (!bookingToCancel) return;
+    try {
+      setIsCancelling(true);
+      await cancelBooking(bookingToCancel.id);
+      setBookingToCancel(null);
+    } catch {
+      // Error is caught and surfaced via useBookings error state
+    } finally {
+      setIsCancelling(false);
+    }
+  };
 
   const toggleExpand = (id: string) => {
     setExpandedBookingIds((prev) => ({
@@ -351,7 +367,7 @@ export function BookingsView() {
                               </DropdownMenuItem> */}
                               {booking.status !== 'CANCELLED' && (
                                 <DropdownMenuItem
-                                  onClick={() => cancelBooking(booking.id)}
+                                  onClick={() => setBookingToCancel(booking)}
                                   className="gap-2 text-destructive focus:text-destructive cursor-pointer"
                                 >
                                   Cancel Booking
@@ -467,6 +483,13 @@ export function BookingsView() {
         open={showErrorDialog}
         onOpenChange={setShowErrorDialog}
         rawError={error}
+      />
+      <CancelBookingConfirmDialog
+        open={Boolean(bookingToCancel)}
+        onOpenChange={(open) => !open && setBookingToCancel(null)}
+        booking={bookingToCancel}
+        onConfirm={handleConfirmCancel}
+        isLoading={isCancelling}
       />
     </div>
   );
