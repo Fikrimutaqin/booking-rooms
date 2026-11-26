@@ -104,8 +104,6 @@ export function Sidebar({
             </div>
           </SidebarHeader>
 
-          <SidebarSeparator className="hidden md:block" />
-
           {/* Shadcn UI Navigation Landmark */}
           <SidebarContent className="p-3">
             <nav aria-label="Main Navigation">
@@ -149,30 +147,27 @@ export function Sidebar({
         </div>
 
         {/* Bottom Section: Logout Footer with Shadcn UI Menu */}
-        <div>
-          <SidebarSeparator />
-          <SidebarFooter className="p-3">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={onLogout}
-                  tooltip={isCollapsed ? 'Logout' : undefined}
-                  className={cn(
-                    'w-full transition-colors text-muted-foreground hover:bg-muted hover:text-foreground',
-                    isCollapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3'
-                  )}
-                >
-                  <LogOut className="h-4 w-4 shrink-0" />
-                  {!isCollapsed ? (
-                    <span>Logout</span>
-                  ) : (
-                    <span className="sr-only">Logout</span>
-                  )}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarFooter>
-        </div>
+        <SidebarFooter className="p-3">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={onLogout}
+                tooltip={isCollapsed ? 'Logout' : undefined}
+                className={cn(
+                  'w-full transition-colors text-muted-foreground hover:bg-muted hover:text-foreground',
+                  isCollapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3'
+                )}
+              >
+                <LogOut className="h-4 w-4 shrink-0" />
+                {!isCollapsed ? (
+                  <span>Logout</span>
+                ) : (
+                  <span className="sr-only">Logout</span>
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
       </aside>
     </>
   );

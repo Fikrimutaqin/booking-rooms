@@ -73,11 +73,11 @@ export function DashboardPage(props: DashboardPageProps) {
           <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="action-name">Name / Title</Label>
-              <Input id="action-name" placeholder="Enter title or name..." />
+              <Input id="action-name" name="title" placeholder="Enter title or name..." />
             </div>
             <div className="space-y-2">
               <Label htmlFor="action-desc">Description / Notes</Label>
-              <Input id="action-desc" placeholder="Add a brief note..." />
+              <Input id="action-desc" name="notes" placeholder="Add a brief note..." />
             </div>
           </div>
           <DialogFooter className="flex sm:justify-end gap-2">
