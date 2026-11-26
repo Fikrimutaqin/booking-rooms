@@ -4,6 +4,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PublicOnlyRoute } from '@/components/auth/PublicOnlyRoute';
 import { LoginPage } from '@/pages/LoginPage';
 import { DashboardPage } from '@/pages/DashboardPage';
+import { AddBookingPage } from '@/pages/AddBookingPage';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -63,6 +64,16 @@ export function App() {
             element={
               <ProtectedRoute>
                 <DashboardRoute />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Protected add booking route with calendar UI */}
+          <Route
+            path={ROUTES.ADD_BOOKING}
+            element={
+              <ProtectedRoute>
+                <AddBookingPage />
               </ProtectedRoute>
             }
           />

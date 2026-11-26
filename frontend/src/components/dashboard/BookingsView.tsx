@@ -1,4 +1,5 @@
-import { CalendarDays, Clock, AlertCircle, MoreHorizontal, Loader2, Trash2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { CalendarDays, Clock, AlertCircle, MoreHorizontal, Loader2, Trash2, Plus } from 'lucide-react';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import {
 import { useBookings } from '@/hooks/useBookings';
 import { getBookingStatusVariant } from '@/utils/status';
 import { formatSchedule } from '@/utils/date';
+import { ROUTES } from '@/constants/routes';
 
 /**
  * Name Function: BookingsView
@@ -35,6 +37,7 @@ import { formatSchedule } from '@/utils/date';
  * Reason: Renders real-time reservation data via useBookings, handling loading skeletons, error states, and empty states when no records exist.
  **/
 export function BookingsView() {
+  const navigate = useNavigate();
   const { bookings, loading, error, cancelBooking } = useBookings();
 
   const totalBookings = bookings.length;
@@ -108,11 +111,20 @@ export function BookingsView() {
               ) : bookings.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
-                    <div className="flex flex-col items-center justify-center gap-1">
+                    <div className="flex flex-col items-center justify-center gap-2">
                       <p className="font-medium text-foreground">No room bookings found</p>
                       <p className="text-xs text-muted-foreground">
                         Created bookings will appear in this table automatically.
                       </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(ROUTES.ADD_BOOKING)}
+                        className="mt-1 gap-1.5 shadow-sm"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>Add First Booking</span>
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>

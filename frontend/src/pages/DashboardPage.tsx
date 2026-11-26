@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/layouts/DashboardLayout';
 import { DashboardHeader } from '@/components/dashboard/Header';
 import { BookingsView } from '@/components/dashboard/BookingsView';
@@ -15,6 +16,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useDashboardState } from '@/hooks/useDashboardState';
+import { ROUTES } from '@/constants/routes';
 import type { DashboardPageProps } from '@/types/dashboard';
 
 export type { DashboardPageProps };
@@ -25,6 +27,7 @@ export type { DashboardPageProps };
  * Reason: Follows a presentational component pattern by delegating state and configuration to useDashboardState, keeping the page focused on layout composition.
  **/
 export function DashboardPage(props: DashboardPageProps) {
+  const navigate = useNavigate();
   const {
     activeTab,
     setActiveTab,
@@ -39,6 +42,14 @@ export function DashboardPage(props: DashboardPageProps) {
     closeDialog,
   } = useDashboardState(props);
 
+  const handleAction = () => {
+    if (activeTab === 'bookings') {
+      navigate(ROUTES.ADD_BOOKING);
+    } else {
+      openDialog();
+    }
+  };
+
   return (
     <DashboardLayout
       activeTab={activeTab}
@@ -51,7 +62,7 @@ export function DashboardPage(props: DashboardPageProps) {
         title={currentConfig.title}
         description={currentConfig.description}
         actionLabel={currentConfig.actionLabel}
-        onAction={openDialog}
+        onAction={handleAction}
         searchPlaceholder={currentConfig.searchPlaceholder}
         isSidebarCollapsed={isCollapsed}
         onExpandSidebar={expandSidebar}
