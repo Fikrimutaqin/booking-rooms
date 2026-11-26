@@ -1,14 +1,24 @@
-import * as React from 'react';
+import { cn } from '@/lib/utils';
+import type { AuthLayoutProps } from '@/types/layout';
 
-export interface AuthLayoutProps {
-  children: React.ReactNode;
-}
+export type { AuthLayoutProps };
 
+/**
+ * Name Function: AuthLayout
+ * Description: Authentication page layout component providing a vertically and horizontally centered container with accessibility skip links.
+ * Reason: Ensures the login card is rendered proportionally across mobile, tablet, and desktop screens.
+ **/
 export function AuthLayout({
-  children
+  children,
+  className,
 }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen w-full flex flex-col justify-between bg-background text-foreground selection:bg-primary selection:text-primary-foreground antialiased">
+    <div
+      className={cn(
+        'min-h-screen w-full flex flex-col justify-between bg-background text-foreground selection:bg-primary selection:text-primary-foreground antialiased',
+        className
+      )}
+    >
       {/* Skip Link for Accessibility */}
       <a
         href="#auth-content"
@@ -37,3 +47,5 @@ export function AuthLayout({
     </div>
   );
 }
+
+export default AuthLayout;

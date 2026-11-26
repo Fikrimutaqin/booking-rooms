@@ -12,6 +12,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
+import { Role } from '@prisma/client';
 
 // Import Services
 import { BookingsService } from './bookings.service';
@@ -51,6 +52,27 @@ export class BookingsController {
   @ResponseMessage('Booking successfully created')
   create(@CurrentUser() user: JwtPayload, @Body() dto: CreateBookingDto) {
     return this.bookingsService.create(user.id, dto);
+  }
+
+  /**
+   * Controller for finding all bookings or current user bookings
+   * @param user JWT payload
+   * @param query Query filter parameters
+   * @param pagination Pagination parameters
+   * @returns List of bookings
+   */
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @ResponseMessage('Successfully retrieved list of bookings')
+  findAll(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: QueryBookingDto,
+    @Paginate() pagination: PaginationParams,
+  ) {
+    if (user.role === Role.ADMIN) {
+      return this.bookingsService.findAll(query, pagination);
+    }
+    return this.bookingsService.findBookingMe(user.id, query, pagination);
   }
 
   /**

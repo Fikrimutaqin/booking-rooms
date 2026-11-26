@@ -128,6 +128,47 @@ export class BookingsService {
   }
 
   /**
+   * @description Find all bookings (Admin) with filter and pagination
+   * @param query Query booking filter
+   * @param pagination Pagination parameters
+   * @returns Paginated result of bookings
+   */
+  async findAll(
+    query: QueryBookingDto,
+    pagination: PaginationParams,
+  ): Promise<PaginatedResult<BookingWithRoom>> {
+    const where: Prisma.BookingWhereInput = {
+      ...(query?.status && { status: query.status }),
+      ...(query?.roomId && { roomId: query.roomId }),
+      ...(query?.from && { startAt: { gte: new Date(query.from) } }),
+      ...(query?.to && { endAt: { lte: new Date(query.to) } }),
+    };
+
+    const [data, total] = await Promise.all([
+      this.prisma.booking.findMany({
+        where,
+        include: {
+          room: { select: { id: true, name: true, location: true } },
+          user: { select: { id: true, name: true, email: true } },
+        },
+        orderBy: { startAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.limit || 20,
+      }),
+      this.prisma.booking.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: pagination.page,
+        limit: pagination.limit,
+      },
+    };
+  }
+
+  /**
    * @description Find booking by ID
    * @param id Booking ID
    * @param user User payload

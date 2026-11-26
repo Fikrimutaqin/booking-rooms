@@ -2,17 +2,16 @@ import * as React from 'react';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sidebar } from '@/components/dashboard/Sidebar';
-import { TabType } from '@/types/dashboard';
+import { cn } from '@/lib/utils';
+import type { DashboardLayoutProps } from '@/types/layout';
 
-export interface DashboardLayoutProps {
-  children: React.ReactNode;
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
-  onLogout: () => void;
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
-}
+export type { DashboardLayoutProps };
 
+/**
+ * Name Function: DashboardLayout
+ * Description: Primary dashboard shell wrapping desktop/mobile sidebar navigation and the main scrollable content area.
+ * Reason: Isolates mobile navbar management and sidebar collapse state synchronization so child views transition smoothly without unmounting the layout.
+ **/
 export function DashboardLayout({
   children,
   activeTab,
@@ -20,11 +19,17 @@ export function DashboardLayout({
   onLogout,
   isCollapsed,
   onToggleCollapse,
+  className,
 }: DashboardLayoutProps) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col md:flex-row antialiased">
+    <div
+      className={cn(
+        'min-h-screen bg-background text-foreground flex flex-col md:flex-row antialiased',
+        className
+      )}
+    >
       {/* Skip Link for Accessibility */}
       <a
         href="#dashboard-main"
@@ -71,3 +76,5 @@ export function DashboardLayout({
     </div>
   );
 }
+
+export default DashboardLayout;
