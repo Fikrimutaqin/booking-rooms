@@ -148,7 +148,6 @@ export interface CreateBookingPayload {
   isRecurring?: boolean;
   recurrenceFrequency?: 'WEEKLY';
   recurrenceWeeks?: number;
-  conflictStrategy?: 'ALL_OR_NOTHING' | 'SKIP_CONFLICTS';
 }
 
 /**

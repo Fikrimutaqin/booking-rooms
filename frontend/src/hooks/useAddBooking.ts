@@ -113,9 +113,6 @@ export function useAddBooking() {
   // Recurring booking states
   const [isRecurring, setIsRecurring] = React.useState(false);
   const [recurrenceWeeks, setRecurrenceWeeks] = React.useState(4);
-  const [conflictStrategy, setConflictStrategy] = React.useState<'ALL_OR_NOTHING' | 'SKIP_CONFLICTS'>(
-    'ALL_OR_NOTHING'
-  );
 
   // Toggle recurring and automatically shift away from weekends if currently on one
   const handleToggleRecurring = React.useCallback((enable: boolean) => {
@@ -423,7 +420,7 @@ export function useAddBooking() {
 
     try {
       let createdCount = 1;
-      let skippedCount = 0;
+      const skippedCount = 0;
 
       if (isMultiDate) {
         const targetDays = multiDatePreview.filter((p) => !p.isWeekend);
@@ -440,9 +437,8 @@ export function useAddBooking() {
         if (clashingDay) {
           setErrorDialogState({
             open: true,
-            error: `Schedule conflict on ${clashingDay.dateFormatted}: ${
-              clashingDay.conflictReason || 'Room already booked'
-            }.`,
+            error: `Schedule conflict on ${clashingDay.dateFormatted}: ${clashingDay.conflictReason || 'Room already booked'
+              }.`,
           });
           return;
         }
@@ -466,26 +462,57 @@ export function useAddBooking() {
           })
         );
         createdCount = targetDays.length;
+      } else if (isRecurring) {
+        const targetWeeks = recurringPreview.filter((p) => !p.isWeekend);
+        if (targetWeeks.length === 0) {
+          setErrorDialogState({
+            open: true,
+            error:
+              'The selected recurring dates fall on weekends. All rooms are closed on weekends.',
+          });
+          return;
+        }
+
+        const clashingWeek = targetWeeks.find((p) => p.hasConflict);
+        if (clashingWeek) {
+          setErrorDialogState({
+            open: true,
+            error: `Schedule conflict on ${clashingWeek.dateFormatted}: ${
+              clashingWeek.conflictReason || 'Room already booked'
+            }.`,
+          });
+          return;
+        }
+
+        // Create standard booking for each recurring week without non-whitelisted properties
+        await Promise.all(
+          targetWeeks.map((week) => {
+            const weekStartAt = new Date(
+              `${week.dateStr}T${startTime}:00+07:00`
+            );
+            const weekEndAt = new Date(
+              `${week.dateStr}T${endTime}:00+07:00`
+            );
+
+            return createBooking({
+              roomId,
+              title: title.trim(),
+              startAt: weekStartAt.toISOString(),
+              endAt: weekEndAt.toISOString(),
+            });
+          })
+        );
+        createdCount = targetWeeks.length;
       } else {
         const endDateTime = new Date(`${selectedDateStr}T${endTime}:00+07:00`);
 
-        const result = await createBooking({
+        await createBooking({
           roomId,
           title: title.trim(),
           startAt: startDateTime.toISOString(),
           endAt: endDateTime.toISOString(),
-          ...(isRecurring && {
-            isRecurring: true,
-            recurrenceFrequency: 'WEEKLY',
-            recurrenceWeeks,
-            conflictStrategy,
-          }),
         });
-
-        const isRecResult =
-          result && typeof result === 'object' && 'isRecurring' in result;
-        createdCount = isRecResult ? result.totalCreated : recurrenceWeeks;
-        skippedCount = isRecResult ? result.conflicts.length : 0;
+        createdCount = 1;
       }
 
       const selectedRoom = rooms.find((r) => r.id === roomId);
@@ -506,9 +533,8 @@ export function useAddBooking() {
           recurringSummary: isMultiDate
             ? `Multi-date reservation confirmed: ${workingDaysCount} working days scheduled (${weekendDaysCount} weekend days excluded).`
             : isRecurring
-              ? `Weekly recurring reservation confirmed: ${createdCount} of ${recurrenceWeeks} sessions scheduled${
-                  skippedCount > 0 ? ` (${skippedCount} conflicts skipped)` : ''
-                }.`
+              ? `Weekly recurring reservation confirmed: ${createdCount} of ${recurrenceWeeks} sessions scheduled${skippedCount > 0 ? ` (${skippedCount} conflicts skipped)` : ''
+              }.`
               : undefined,
         },
       });
@@ -557,8 +583,6 @@ export function useAddBooking() {
     setIsRecurring: handleToggleRecurring,
     recurrenceWeeks,
     setRecurrenceWeeks,
-    conflictStrategy,
-    setConflictStrategy,
     recurringPreview,
     handleSelectRecurringDay,
     currentDayIndex: selectedDate.getDay() === 0 ? 7 : selectedDate.getDay(),
